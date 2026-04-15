@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ground Scout — Arcana Mace + Acumen</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; overflow:hidden; font-family:Arial,sans-serif; }
+canvas { display:block; }
+
+.hud-top { position:fixed; top:0; left:0; right:0; padding:1.4rem 2rem; display:flex; justify-content:space-between; align-items:flex-start; pointer-events:none; }
+.hud-logo { display:flex; align-items:center; gap:10px; }
+.hud-logo img { height:28px; filter:brightness(0) invert(1); }
+.hud-title-block .title { font-size:1.1rem; font-weight:900; color:#fff; letter-spacing:0.05em; }
+.hud-title-block .sub { font-size:0.58rem; letter-spacing:0.2em; color:#888; text-transform:uppercase; margin-top:2px; }
+.hud-right { display:flex; flex-direction:column; gap:0.5rem; align-items:flex-end; }
+.stat-row { display:flex; align-items:center; gap:8px; }
+.stat-label { font-size:0.55rem; letter-spacing:0.15em; color:#555; text-transform:uppercase; }
+.stat-val { font-size:0.85rem; font-weight:700; color:#fff; min-width:28px; text-align:right; }
+.stat-val.green { color:#22c55e; }
+.stat-val.cyan  { color:#00d4ff; }
+
+.hud-bottom { position:fixed; bottom:0; left:0; right:0; padding:1rem 2rem; display:flex; gap:2.5rem; align-items:center; pointer-events:none; background:linear-gradient(0deg,rgba(0,0,0,0.7) 0%,transparent 100%); }
+.bi-label { font-size:0.52rem; letter-spacing:0.15em; color:#555; text-transform:uppercase; }
+.bi-val { font-size:0.8rem; font-weight:700; color:#fff; margin-top:2px; }
+.bi-val.green { color:#22c55e; }
+.bi-val.red   { color:#ef4444; animation:fpulse 0.6s infinite; }
+@keyframes fpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.corner { position:fixed; width:24px; height:24px; border-color:rgba(180,180,180,0.35); border-style:solid; pointer-events:none; }
+.c-tl { top:10px; left:10px; border-width:2px 0 0 2px; }
+.c-tr { top:10px; right:10px; border-width:2px 2px 0 0; }
+.c-bl { bottom:10px; left:10px; border-width:0 0 2px 2px; }
+.c-br { bottom:10px; right:10px; border-width:0 2px 2px 0; }
+
+#toast-threat, #toast-elim {
+  position:fixed; top:1.5rem; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:10px;
+  background:rgba(0,0,0,0.8); border-radius:3px;
+  padding:10px 20px 10px 14px;
+  backdrop-filter:blur(8px);
+  opacity:0; transition:opacity 0.25s; pointer-events:none; white-space:nowrap;
+}
+#toast-threat { border:1px solid rgba(239,68,68,0.5); border-left:3px solid #ef4444; box-shadow:0 0 20px rgba(239,68,68,0.12); }
+#toast-elim   { border:1px solid rgba(34,197,94,0.5);  border-left:3px solid #22c55e; box-shadow:0 0 20px rgba(34,197,94,0.12); }
+.toast-icon { width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:900; flex-shrink:0; }
+#toast-threat .toast-icon { background:rgba(239,68,68,0.2); border:1.5px solid #ef4444; color:#ef4444; }
+#toast-elim   .toast-icon { background:rgba(34,197,94,0.2);  border:1.5px solid #22c55e; color:#22c55e; }
+.toast-title { font-size:0.7rem; font-weight:700; letter-spacing:0.18em; }
+#toast-threat .toast-title { color:#ef4444; }
+#toast-elim   .toast-title { color:#22c55e; }
+.toast-sub { font-size:0.52rem; color:rgba(255,255,255,0.4); letter-spacing:0.12em; margin-top:1px; }
+.toast.show { opacity:1 !important; }
+
+/* Target lock box */
+.tbox {
+  position:fixed; width:148px; pointer-events:none;
+  opacity:0; transition:opacity 0.2s;
+  font-family:Arial,sans-serif; transform:translate(0,-50%);
+}
+.tbox.visible { opacity:1; }
+.tbox-frame { border:1px solid rgba(239,68,68,0.7); background:rgba(0,0,0,0.75); padding:8px 10px; position:relative; }
+.tbox-frame::before { content:''; position:absolute; top:-1px; left:-1px; width:9px; height:9px; border:2px solid #ef4444; border-right:none; border-bottom:none; }
+.tbox-frame::after  { content:''; position:absolute; bottom:-1px; right:-1px; width:9px; height:9px; border:2px solid #ef4444; border-left:none; border-top:none; }
+.tbox-tr { position:absolute; top:-1px; right:-1px; width:9px; height:9px; border:2px solid #ef4444; border-left:none; border-bottom:none; }
+.tbox-bl { position:absolute; bottom:-1px; left:-1px; width:9px; height:9px; border:2px solid #ef4444; border-right:none; border-top:none; }
+.tbox-label { font-size:0.5rem; letter-spacing:0.16em; color:#ef4444; text-transform:uppercase; margin-bottom:4px; }
+.tbox-type  { font-size:0.9rem; font-weight:900; color:#fff; letter-spacing:0.08em; }
+.tbox-status { font-size:0.5rem; letter-spacing:0.14em; color:rgba(255,255,255,0.45); margin-top:5px; animation:fpulse 0.8s infinite; }
+.tbox-elim   { font-size:0.5rem; letter-spacing:0.14em; color:#22c55e; font-weight:800; margin-top:5px; display:none; }
+.tbox.eliminated .tbox-label { color:#22c55e; }
+.tbox.eliminated .tbox-frame, .tbox.eliminated .tbox-frame::before, .tbox.eliminated .tbox-frame::after,
+.tbox.eliminated .tbox-tr, .tbox.eliminated .tbox-bl { border-color:#22c55e; }
+.tbox.eliminated .tbox-status { display:none; }
+.tbox.eliminated .tbox-elim   { display:block; }
+
+.t-reticle { position:fixed; pointer-events:none; transform:translate(-50%,-50%); z-index:60; }
+.t-crosshair { width:26px; height:26px; border:1.5px solid #ef4444; border-radius:50%; margin:0 auto 3px; animation:spin 2.5s linear infinite; position:relative; }
+.t-crosshair::before { content:''; position:absolute; width:1.5px; height:7px; background:#ef4444; left:50%; top:-4px; transform:translateX(-50%); }
+.t-crosshair::after  { content:''; position:absolute; height:1.5px; width:7px; background:#ef4444; top:50%; left:-4px; transform:translateY(-50%); }
+@keyframes spin { to { transform:rotate(360deg); } }
+.t-tag { text-align:center; font-size:0.48rem; letter-spacing:0.14em; color:#ef4444; font-weight:800; text-shadow:0 0 6px #ef4444; }
+
+#nav-back { position:fixed; bottom:1.4rem; right:1.5rem; z-index:999; font-family:Arial,sans-serif; font-size:0.6rem; letter-spacing:0.14em; color:#555; text-decoration:none; text-transform:uppercase; border:1px solid rgba(255,255,255,0.1); padding:6px 14px; border-radius:3px; transition:color 0.2s, border-color 0.2s; }
+#nav-back:hover { color:#fff; border-color:rgba(255,255,255,0.3); }
+</style>
+</head>
+<body>
+
+<div id="container"></div>
+
+<!-- HUD -->
+<div class="hud-top">
+  <div class="hud-logo">
+    <div class="hud-title-block">
+      <div class="title">Arcana Mace + Acumen</div>
+      <div class="sub">Ground Scout — Orbital Defence</div>
+    </div>
+  </div>
+  <div class="hud-right">
+    <div class="stat-row">
+      <div class="stat-label">Threats Intercepted</div>
+      <div class="stat-val green" id="count">0</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Scout Orb</div>
+      <div class="stat-val cyan" id="orb-status">ACTIVE</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">AI Mode</div>
+      <div class="stat-val" id="ai-mode">SCANNING</div>
+    </div>
+  </div>
+</div>
+
+<div class="hud-bottom">
+  <div>
+    <div class="bi-label">Soldier Status</div>
+    <div class="bi-val green">MOBILE</div>
+  </div>
+  <div>
+    <div class="bi-label">Laser</div>
+    <div class="bi-val" id="laser-status">STANDBY</div>
+  </div>
+  <div>
+    <div class="bi-label">Active Threats</div>
+    <div class="bi-val" id="threat-count">0</div>
+  </div>
+</div>
+
+<div class="corner c-tl"></div><div class="corner c-tr"></div>
+<div class="corner c-bl"></div><div class="corner c-br"></div>
+
+<!-- Toasts -->
+<div id="toast-threat" class="toast">
+  <div class="toast-icon">!</div>
+  <div><div class="toast-title">THREAT DETECTED</div><div class="toast-sub">SCOUT ORB ENGAGING</div></div>
+</div>
+<div id="toast-elim" class="toast">
+  <div class="toast-icon">✓</div>
+  <div><div class="toast-title">TARGET ELIMINATED</div><div class="toast-sub">THREAT NEUTRALISED — AIRSPACE CLEAR</div></div>
+</div>
+
+<!-- Target boxes -->
+<div class="tbox" id="tbox-0"><div class="tbox-frame"><div class="tbox-tr"></div><div class="tbox-bl"></div><div class="tbox-label" id="lbl-0">TARGET LOCKED</div><div class="tbox-type" id="typ-0">MISSILE</div><div class="tbox-status">◈ ENGAGING...</div><div class="tbox-elim">✓ ELIMINATED</div></div></div>
+<div class="tbox" id="tbox-1"><div class="tbox-frame"><div class="tbox-tr"></div><div class="tbox-bl"></div><div class="tbox-label" id="lbl-1">TARGET LOCKED</div><div class="tbox-type" id="typ-1">DRONE</div><div class="tbox-status">◈ ENGAGING...</div><div class="tbox-elim">✓ ELIMINATED</div></div></div>
+
+<a id="nav-back" href="index.html">← Orbital Defence</a>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+const W = window.innerWidth, H = window.innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.getElementById('container').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x010208);
+scene.fog = new THREE.FogExp2(0x010208, 0.014);
+
+const camera = new THREE.PerspectiveCamera(60, W/H, 0.1, 300);
+camera.position.set(0, 16, 26);
+
+// ── LIGHTS ──
+scene.add(new THREE.AmbientLight(0x0d0a1a, 4));
+const sun = new THREE.DirectionalLight(0xddeeff, 1.0);
+sun.position.set(15, 30, 10);
+scene.add(sun);
+const purpleGlow = new THREE.PointLight(0x7c3aed, 2, 35);
+purpleGlow.position.set(0, 18, 0);
+scene.add(purpleGlow);
+
+// ── STARS ──
+(()=>{
+  const n=3000, p=new Float32Array(n*3);
+  for(let i=0;i<n;i++){const t=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),r=130+Math.random()*30;p[i*3]=r*Math.sin(ph)*Math.cos(t);p[i*3+1]=Math.abs(r*Math.cos(ph));p[i*3+2]=r*Math.sin(ph)*Math.sin(t);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:0.28,transparent:true,opacity:0.85})));
+})();
+
+// ── GROUND ──
+const gnd=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x090910,roughness:1}));
+gnd.rotation.x=-Math.PI/2; gnd.position.y=-0.02; scene.add(gnd);
+const grid=new THREE.GridHelper(200,50,0x0a1428,0x0a1428);
+grid.position.y=-0.01; grid.material.transparent=true; grid.material.opacity=0.45; scene.add(grid);
+
+// ── SOLDIER ──────────────────────────────────────────────────────
+function mat(col,met=0){ return new THREE.MeshStandardMaterial({color:col,roughness:0.85,metalness:met}); }
+function cyl(rt,rb,h,seg=8){ return new THREE.CylinderGeometry(rt,rb,h,seg); }
+function box(x,y,z){ return new THREE.BoxGeometry(x,y,z); }
+
+function buildSoldier() {
+  const root = new THREE.Group();
+  const olive = mat(0x3a4f2a), skin = mat(0xb8845a), blk = mat(0x1a1a1a), gun = mat(0x2a2a2a,0.8), helm = mat(0x2e3d22);
+
+  // Body
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2,12,12), skin);
+  head.position.y = 2.52;
+  const helmetGeo = new THREE.SphereGeometry(0.235,12,8,0,Math.PI*2,0,Math.PI/1.75);
+  const helmMesh = new THREE.Mesh(helmetGeo, helm); helmMesh.position.y = 2.56;
+  const torso = new THREE.Mesh(box(0.5,0.68,0.27), olive); torso.position.y=1.94;
+  const hips  = new THREE.Mesh(box(0.42,0.22,0.25), olive); hips.position.y=1.48;
+
+  // Arms
+  const lArm = new THREE.Group(); lArm.position.set(-0.32,2.18,0);
+  lArm.add(new THREE.Mesh(cyl(0.07,0.065,0.4), olive)).position.y=-0.2;
+  lArm.add(new THREE.Mesh(cyl(0.06,0.055,0.36), olive)).position.y=-0.58;
+
+  const rArm = new THREE.Group(); rArm.position.set(0.32,2.18,0);
+  rArm.add(new THREE.Mesh(cyl(0.07,0.065,0.4), olive)).position.y=-0.2;
+  rArm.add(new THREE.Mesh(cyl(0.06,0.055,0.36), olive)).position.y=-0.58;
+  // Rifle
+  const rifle = new THREE.Group(); rifle.position.set(0,-0.6,0);
+  rifle.add(Object.assign(new THREE.Mesh(box(0.055,0.095,0.7),gun),{position:new THREE.Vector3(0,0,0.3)}));
+  const barrel = new THREE.Mesh(cyl(0.02,0.02,0.5,6),gun); barrel.rotation.x=Math.PI/2; barrel.position.set(0,0.04,0.65);
+  const stock  = new THREE.Mesh(box(0.05,0.08,0.22),gun); stock.position.set(0,-0.04,-0.12);
+  rifle.add(barrel,stock);
+  rArm.add(rifle);
+
+  // Legs
+  const lLeg = new THREE.Group(); lLeg.position.set(-0.16,1.36,0);
+  lLeg.add(new THREE.Mesh(cyl(0.095,0.085,0.52,8),olive)).position.y=-0.26;
+  lLeg.add(new THREE.Mesh(cyl(0.075,0.07,0.48,8),olive)).position.y=-0.76;
+  lLeg.add(Object.assign(new THREE.Mesh(box(0.13,0.1,0.24),blk),{position:new THREE.Vector3(0,-1.06,0.04)}));
+
+  const rLeg = new THREE.Group(); rLeg.position.set(0.16,1.36,0);
+  rLeg.add(new THREE.Mesh(cyl(0.095,0.085,0.52,8),olive)).position.y=-0.26;
+  rLeg.add(new THREE.Mesh(cyl(0.075,0.07,0.48,8),olive)).position.y=-0.76;
+  rLeg.add(Object.assign(new THREE.Mesh(box(0.13,0.1,0.24),blk),{position:new THREE.Vector3(0,-1.06,0.04)}));
+
+  root.add(head,helmMesh,torso,hips,lArm,rArm,lLeg,rLeg);
+  return { root, lArm, rArm, lLeg, rLeg };
+}
+
+const s = buildSoldier();
+scene.add(s.root);
+
+// ── SCOUT ORB ─────────────────────────────────────────────────────
+function buildOrb(col,col2,r=0.52) {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(r,16,16), new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.1})));
+  const wm = new THREE.MeshBasicMaterial({color:col2,wireframe:true,transparent:true,opacity:0.28});
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(r,16,16),wm));
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(r*0.38,10,10),new THREE.MeshBasicMaterial({color:0xffffff})));
+  const rm = new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.75});
+  const ring1=new THREE.Mesh(new THREE.TorusGeometry(r*1.35,0.022,6,36),rm); ring1.rotation.x=Math.PI/3;
+  const ring2=new THREE.Mesh(new THREE.TorusGeometry(r*1.35,0.022,6,36),rm.clone()); ring2.rotation.x=-Math.PI/4; ring2.rotation.z=Math.PI/5;
+  g.add(ring1,ring2);
+  const light=new THREE.PointLight(col,3,7); g.add(light);
+  return {g, ring1, ring2, wm};
+}
+const orb = buildOrb(0x00d4ff, 0x88eeff);
+orb.g.position.set(0, 3.8, 0);
+scene.add(orb.g);
+
+// ── SIGNAL PULSES ─────────────────────────────────────────────────
+const pulses=[];
+function emitPulse() {
+  const pts=[];
+  for(let i=0;i<=64;i++){const a=(i/64)*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a),0,Math.sin(a)));}
+  const geo=new THREE.BufferGeometry().setFromPoints(pts);
+  const mat1=new THREE.LineBasicMaterial({color:0x00d4ff,transparent:true,opacity:0.75});
+  const mat2=new THREE.LineBasicMaterial({color:0x88eeff,transparent:true,opacity:0.35});
+  const r1=new THREE.Line(geo,mat1); r1.position.copy(orb.g.position);
+  const r2=new THREE.Line(geo.clone(),mat2); r2.position.copy(orb.g.position);
+  scene.add(r1,r2);
+  pulses.push({r1,r2,mat1,mat2,t:0,life:70,sy:orb.g.position.y});
+}
+
+// ── THREATS ───────────────────────────────────────────────────────
+const threats=[];
+let intercepted=0, laserActive=null, orbBusy=false, frame=0;
+
+class Threat {
+  constructor() {
+    const a=Math.random()*Math.PI*2, d=22+Math.random()*8;
+    this.pos=new THREE.Vector3(Math.sin(a)*d, 14+Math.random()*7, Math.cos(a)*d);
+    this.alive=true; this.tagged=false;
+    this.speed=0.09+Math.random()*0.05;
+    this.type=Math.random()<0.55?'missile':'drone';
+    const g=new THREE.Group();
+    const rm=new THREE.MeshBasicMaterial({color:0xff2200});
+    const rm2=new THREE.MeshBasicMaterial({color:0xff5500});
+    const dk=new THREE.MeshBasicMaterial({color:0xcc1100});
+    if(this.type==='missile'){
+      const b=new THREE.Mesh(cyl(0.09,0.13,1.6,8),rm); b.rotation.x=Math.PI/2;
+      const n=new THREE.Mesh(new THREE.ConeGeometry(0.09,0.4,8),rm2); n.rotation.x=Math.PI/2; n.position.z=1.0;
+      const f1=new THREE.Mesh(box(0.45,0.03,0.3),dk); f1.position.z=-0.65;
+      const f2=f1.clone(); f2.rotation.z=Math.PI/2;
+      g.add(b,n,f1,f2);
+    } else {
+      const b=new THREE.Mesh(box(0.55,0.14,0.55),rm);
+      const ah=new THREE.Mesh(box(1.7,0.06,0.08),dk);
+      const av=new THREE.Mesh(box(0.08,0.06,1.7),dk);
+      const rg=new THREE.CylinderGeometry(0.2,0.2,0.05,8);
+      const rm3=new THREE.MeshBasicMaterial({color:0xff4400,transparent:true,opacity:0.75});
+      this._rotors=[[0.8,0.1,0.8],[-0.8,0.1,0.8],[0.8,0.1,-0.8],[-0.8,0.1,-0.8]].map(p=>{const r=new THREE.Mesh(rg,rm3);r.position.set(...p);return r;});
+      g.add(b,ah,av,...this._rotors);
+    }
+    this.light=new THREE.PointLight(0xff2200,2,7); g.add(this.light);
+    this.mesh=g; this.mesh.position.copy(this.pos); scene.add(this.mesh);
+  }
+  update(tp) {
+    if(!this.alive) return;
+    const target=tp.clone().add(new THREE.Vector3(0,1.4,0));
+    this.pos.addScaledVector(target.clone().sub(this.pos).normalize(),this.speed);
+    this.mesh.position.copy(this.pos);
+    if(this.type==='missile'){this.mesh.lookAt(target);}
+    else{this.mesh.rotation.y+=0.02;if(this._rotors)this._rotors.forEach(r=>r.rotation.y+=0.3);}
+    if(this.pos.distanceTo(target)<1.3) this.kill();
+  }
+  kill() {
+    if(!this.alive)return;
+    this.alive=false; scene.remove(this.mesh); boom(this.pos.clone());
+  }
+}
+
+// ── EXPLOSIONS ────────────────────────────────────────────────────
+const booms=[];
+function boom(pos){
+  const n=80,pa=new Float32Array(n*3),vs=[];
+  for(let i=0;i<n;i++){pa[i*3]=pos.x;pa[i*3+1]=pos.y;pa[i*3+2]=pos.z;vs.push(new THREE.Vector3((Math.random()-.5)*.7,(Math.random()-.1)*.6,(Math.random()-.5)*.7));}
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pa,3));
+  const mat=new THREE.PointsMaterial({color:0xff6600,size:0.4,transparent:true,opacity:1});
+  const pts=new THREE.Points(geo,mat);scene.add(pts);
+  const fl=new THREE.PointLight(0xff6600,14,16);fl.position.copy(pos);scene.add(fl);
+  booms.push({pts,mat,geo,fl,vels:vs,t:0});
+}
+
+// ── TARGET LOCK SLOTS ─────────────────────────────────────────────
+const slots=[
+  {id:'tbox-0',threat:null,elimTimer:0},
+  {id:'tbox-1',threat:null,elimTimer:0},
+];
+slots.forEach(s=>s.box=document.getElementById(s.id));
+const reticles=new Map();
+
+function assignSlot(threat){
+  const free=slots.find(s=>!s.threat); if(!free)return;
+  free.threat=threat; free.elimTimer=0;
+  document.getElementById('typ-'+free.id.slice(-1)).textContent=threat.type==='missile'?'MISSILE':'DRONE';
+  document.getElementById('lbl-'+free.id.slice(-1)).textContent='TARGET LOCKED';
+  free.box.classList.remove('eliminated'); free.box.classList.add('visible');
+  const div=document.createElement('div'); div.className='t-reticle';
+  div.innerHTML='<div class="t-crosshair"></div><div class="t-tag">'+(threat.type==='missile'?'MISSILE':'DRONE')+'</div>';
+  document.body.appendChild(div); reticles.set(threat,div);
+  const _v=threat.pos.clone().project(camera);
+  const _sx=(_v.x+1)/2*window.innerWidth, _sy=-(_v.y-1)/2*window.innerHeight;
+  free.box.style.left=(_sx>window.innerWidth*.5?_sx-163:_sx+44)+'px';
+  free.box.style.top=_sy+'px';
+}
+function releaseSlot(threat){
+  const slot=slots.find(s=>s.threat===threat); if(!slot)return;
+  document.getElementById('lbl-'+slot.id.slice(-1)).textContent='TARGET ELIMINATED';
+  slot.box.classList.add('eliminated'); slot.elimTimer=60;
+  const r=reticles.get(threat); if(r){r.remove();reticles.delete(threat);}
+}
+
+// ── STATE ─────────────────────────────────────────────────────────
+let runAngle=0;
+const RUN_R=10, RUN_SPEED=0.013, DETECT=17, SPAWN_EVERY=130;
+
+// ── ANIMATE ───────────────────────────────────────────────────────
+function animate(){
+  requestAnimationFrame(animate); frame++;
+  const t=Date.now()*.001;
+
+  // Soldier run circle
+  runAngle+=RUN_SPEED;
+  const sx=Math.sin(runAngle)*RUN_R, sz=Math.cos(runAngle)*RUN_R;
+  s.root.position.set(sx, 0, sz);
+  s.root.rotation.y=-runAngle+Math.PI;
+  const cy=frame*0.15;
+  s.lLeg.rotation.x= Math.sin(cy)*0.72;
+  s.rLeg.rotation.x=-Math.sin(cy)*0.72;
+  s.lArm.rotation.x=-Math.sin(cy)*0.42;
+  s.rArm.rotation.x= Math.sin(cy)*0.22;
+  s.rArm.rotation.z=-0.14;
+  s.root.position.y=Math.abs(Math.sin(cy*2))*0.07;
+
+  // Orb follows soldier
+  const bx=sx-Math.sin(runAngle)*1.3, bz=sz-Math.cos(runAngle)*1.3;
+  orb.g.position.x+=(bx-orb.g.position.x)*0.09;
+  orb.g.position.y+=(3.9+Math.sin(t*1.8)*0.12-orb.g.position.y)*0.1;
+  orb.g.position.z+=(bz-orb.g.position.z)*0.09;
+  orb.ring1.rotation.y+=0.028; orb.ring2.rotation.z+=0.02;
+
+  // Signal pulses
+  if(frame%55===0) emitPulse();
+  for(let i=pulses.length-1;i>=0;i--){
+    const p=pulses[i]; p.t++;
+    const prog=p.t/p.life, r1=0.5+prog*14, r2=0.5+prog*18, y=p.sy*(1-prog)+0.1*prog;
+    p.r1.scale.set(r1,1,r1); p.r2.scale.set(r2,1,r2);
+    p.r1.position.y=y; p.r2.position.y=y;
+    p.mat1.opacity=0.7*(1-prog); p.mat2.opacity=0.3*(1-prog);
+    if(p.t>=p.life){scene.remove(p.r1,p.r2);pulses.splice(i,1);}
+  }
+
+  // Spawn threats
+  if(frame%SPAWN_EVERY===0&&threats.filter(t=>t.alive).length<5) threats.push(new Threat());
+  threats.forEach(th=>th.update(s.root.position));
+  document.getElementById('threat-count').textContent=threats.filter(t=>t.alive).length;
+
+  // AI detection
+  if(!orbBusy){
+    for(const th of threats){
+      if(!th.alive||th.tagged) continue;
+      if(orb.g.position.distanceTo(th.pos)<DETECT){
+        th.tagged=true; orbBusy=true;
+        assignSlot(th);
+        document.getElementById('ai-mode').textContent='ENGAGING';
+        document.getElementById('laser-status').textContent='ACTIVE';
+        document.getElementById('laser-status').className='bi-val red';
+        const toastT=document.getElementById('toast-threat');
+        toastT.classList.add('show'); setTimeout(()=>toastT.classList.remove('show'),1800);
+        // Build laser
+        const geo=new THREE.BufferGeometry().setFromPoints([orb.g.position.clone(),th.pos.clone()]);
+        const m1=new THREE.LineBasicMaterial({color:0x00ffff});
+        const m2=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.45});
+        const l1=new THREE.Line(geo,m1), l2=new THREE.Line(geo.clone(),m2);
+        scene.add(l1,l2);
+        laserActive={l1,l2,geo,m1,m2,threat:th,t:0,life:45};
+        break;
+      }
+    }
+  }
+
+  // Update laser
+  if(laserActive){
+    laserActive.t++;
+    const arr=laserActive.l1.geometry.attributes.position.array;
+    arr[0]=orb.g.position.x; arr[1]=orb.g.position.y; arr[2]=orb.g.position.z;
+    arr[3]=laserActive.threat.pos.x; arr[4]=laserActive.threat.pos.y; arr[5]=laserActive.threat.pos.z;
+    laserActive.l1.geometry.attributes.position.needsUpdate=true;
+    laserActive.l2.geometry.attributes.position.needsUpdate=true;
+    laserActive.m2.opacity=(1-laserActive.t/laserActive.life)*0.45;
+    if(laserActive.t>=laserActive.life){
+      if(laserActive.threat.alive){
+        laserActive.threat.kill(); releaseSlot(laserActive.threat);
+        intercepted++; document.getElementById('count').textContent=intercepted;
+        const toastE=document.getElementById('toast-elim');
+        toastE.classList.add('show'); setTimeout(()=>toastE.classList.remove('show'),1400);
+      }
+      scene.remove(laserActive.l1,laserActive.l2);
+      laserActive=null; orbBusy=false;
+      document.getElementById('ai-mode').textContent='SCANNING';
+      document.getElementById('laser-status').textContent='STANDBY';
+      document.getElementById('laser-status').className='bi-val';
+    }
+  }
+
+  // Explosions
+  for(let i=booms.length-1;i>=0;i--){
+    const b=booms[i]; b.t++;
+    const arr=b.geo.attributes.position.array;
+    for(let j=0;j<b.vels.length;j++){arr[j*3]+=b.vels[j].x;arr[j*3+1]+=b.vels[j].y;arr[j*3+2]+=b.vels[j].z;b.vels[j].y-=0.005;}
+    b.geo.attributes.position.needsUpdate=true;
+    const life=b.t/65; b.mat.opacity=1-life; b.fl.intensity=14*(1-life);
+    if(b.t>=65){scene.remove(b.pts,b.fl);booms.splice(i,1);}
+  }
+
+  // Slot timers + reticles
+  slots.forEach(sl=>{
+    if(sl.elimTimer>0){sl.elimTimer--;
+      if(sl.elimTimer===0){sl.box.classList.remove('visible','eliminated');sl.threat=null;setTimeout(()=>{document.getElementById('lbl-'+sl.id.slice(-1)).textContent='TARGET LOCKED';},300);}
+    }
+  });
+  reticles.forEach((div,threat)=>{
+    if(!threat.alive) return;
+    const v=threat.pos.clone().project(camera);
+    const sx2=(v.x+1)/2*window.innerWidth, sy2=-(v.y-1)/2*window.innerHeight;
+    div.style.left=sx2+'px'; div.style.top=sy2+'px';
+    const slot=slots.find(sl=>sl.threat===threat);
+    if(slot&&slot.box){
+      const ox=sx2>window.innerWidth*.5?sx2-163:sx2+44;
+      slot.box.style.left=ox+'px'; slot.box.style.top=sy2+'px';
+    }
+  });
+
+  // Clean dead
+  for(let i=threats.length-1;i>=0;i--) if(!threats[i].alive) threats.splice(i,1);
+
+  // Camera follows soldier from behind
+  const camTX=sx-Math.sin(runAngle)*20, camTZ=sz-Math.cos(runAngle)*20;
+  camera.position.x+=(camTX-camera.position.x)*0.04;
+  camera.position.y+=(13-camera.position.y)*0.04;
+  camera.position.z+=(camTZ-camera.position.z)*0.04;
+  camera.lookAt(sx, 1.8, sz);
+
+  purpleGlow.position.set(sx,14,sz);
+  purpleGlow.intensity=1.5+Math.sin(t*1.8)*0.5;
+
+  renderer.render(scene,camera);
+}
+
+window.addEventListener('resize',()=>{
+  const w=window.innerWidth,h=window.innerHeight;
+  camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
+});
+
+// Seed
+for(let i=0;i<2;i++) threats.push(new Threat());
+animate();
+</script>
+</body>
+</html>
