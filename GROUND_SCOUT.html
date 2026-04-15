@@ -157,18 +157,21 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 document.getElementById('container').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x010208);
-scene.fog = new THREE.FogExp2(0x010208, 0.014);
+scene.background = new THREE.Color(0x050810);
+scene.fog = new THREE.FogExp2(0x050810, 0.005);
 
 const camera = new THREE.PerspectiveCamera(60, W/H, 0.1, 300);
 camera.position.set(0, 16, 26);
 
 // ── LIGHTS ──
-scene.add(new THREE.AmbientLight(0x0d0a1a, 4));
-const sun = new THREE.DirectionalLight(0xddeeff, 1.0);
-sun.position.set(15, 30, 10);
+scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+const sun = new THREE.DirectionalLight(0xffffff, 2.0);
+sun.position.set(10, 25, 15);
 scene.add(sun);
-const purpleGlow = new THREE.PointLight(0x7c3aed, 2, 35);
+const sun2 = new THREE.DirectionalLight(0x8888ff, 0.8);
+sun2.position.set(-10, 15, -10);
+scene.add(sun2);
+const purpleGlow = new THREE.PointLight(0x7c3aed, 3, 40);
 purpleGlow.position.set(0, 18, 0);
 scene.add(purpleGlow);
 
@@ -181,9 +184,9 @@ scene.add(purpleGlow);
 })();
 
 // ── GROUND ──
-const gnd=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x090910,roughness:1}));
+const gnd=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x1a1f2e,roughness:0.9}));
 gnd.rotation.x=-Math.PI/2; gnd.position.y=-0.02; scene.add(gnd);
-const grid=new THREE.GridHelper(200,50,0x0a1428,0x0a1428);
+const grid=new THREE.GridHelper(200,50,0x1a3050,0x1a3050);
 grid.position.y=-0.01; grid.material.transparent=true; grid.material.opacity=0.45; scene.add(grid);
 
 // ── SOLDIER ──────────────────────────────────────────────────────
@@ -205,12 +208,12 @@ function buildSoldier() {
 
   // Arms
   const lArm = new THREE.Group(); lArm.position.set(-0.32,2.18,0);
-  lArm.add(new THREE.Mesh(cyl(0.07,0.065,0.4), olive)).position.y=-0.2;
-  lArm.add(new THREE.Mesh(cyl(0.06,0.055,0.36), olive)).position.y=-0.58;
+  const la1=new THREE.Mesh(cyl(0.07,0.065,0.4),olive); la1.position.y=-0.2; lArm.add(la1);
+  const la2=new THREE.Mesh(cyl(0.06,0.055,0.36),olive); la2.position.y=-0.58; lArm.add(la2);
 
   const rArm = new THREE.Group(); rArm.position.set(0.32,2.18,0);
-  rArm.add(new THREE.Mesh(cyl(0.07,0.065,0.4), olive)).position.y=-0.2;
-  rArm.add(new THREE.Mesh(cyl(0.06,0.055,0.36), olive)).position.y=-0.58;
+  const ra1=new THREE.Mesh(cyl(0.07,0.065,0.4),olive); ra1.position.y=-0.2; rArm.add(ra1);
+  const ra2=new THREE.Mesh(cyl(0.06,0.055,0.36),olive); ra2.position.y=-0.58; rArm.add(ra2);
   // Rifle
   const rifle = new THREE.Group(); rifle.position.set(0,-0.6,0);
   rifle.add(Object.assign(new THREE.Mesh(box(0.055,0.095,0.7),gun),{position:new THREE.Vector3(0,0,0.3)}));
@@ -221,13 +224,13 @@ function buildSoldier() {
 
   // Legs
   const lLeg = new THREE.Group(); lLeg.position.set(-0.16,1.36,0);
-  lLeg.add(new THREE.Mesh(cyl(0.095,0.085,0.52,8),olive)).position.y=-0.26;
-  lLeg.add(new THREE.Mesh(cyl(0.075,0.07,0.48,8),olive)).position.y=-0.76;
+  const ll1=new THREE.Mesh(cyl(0.095,0.085,0.52,8),olive); ll1.position.y=-0.26; lLeg.add(ll1);
+  const ll2=new THREE.Mesh(cyl(0.075,0.07,0.48,8),olive); ll2.position.y=-0.76; lLeg.add(ll2);
   lLeg.add(Object.assign(new THREE.Mesh(box(0.13,0.1,0.24),blk),{position:new THREE.Vector3(0,-1.06,0.04)}));
 
   const rLeg = new THREE.Group(); rLeg.position.set(0.16,1.36,0);
-  rLeg.add(new THREE.Mesh(cyl(0.095,0.085,0.52,8),olive)).position.y=-0.26;
-  rLeg.add(new THREE.Mesh(cyl(0.075,0.07,0.48,8),olive)).position.y=-0.76;
+  const rl1=new THREE.Mesh(cyl(0.095,0.085,0.52,8),olive); rl1.position.y=-0.26; rLeg.add(rl1);
+  const rl2=new THREE.Mesh(cyl(0.075,0.07,0.48,8),olive); rl2.position.y=-0.76; rLeg.add(rl2);
   rLeg.add(Object.assign(new THREE.Mesh(box(0.13,0.1,0.24),blk),{position:new THREE.Vector3(0,-1.06,0.04)}));
 
   root.add(head,helmMesh,torso,hips,lArm,rArm,lLeg,rLeg);
