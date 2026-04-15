@@ -197,11 +197,50 @@ sRoot.add(lArm);
 
 var rArm=new THREE.Group(); rArm.position.set(0.35,2.28,0); rArm.rotation.z=0.1;
 add(rArm,cy(0.075,0.07,0.42),MO,0,-0.21,0); add(rArm,cy(0.065,0.06,0.38),MO,0,-0.61,0);
-var rif=new THREE.Group(); rif.position.set(0.04,-0.65,0.18); rif.rotation.x=-0.25;
-add(rif,bx(0.06,0.10,0.72),MG,0,0,0.3);
-var brl=new THREE.Mesh(cy(0.022,0.018,0.55,6),MG);brl.rotation.x=Math.PI/2;brl.position.set(0,0.04,0.72);rif.add(brl);
-add(rif,bx(0.05,0.09,0.24),MG,0,-0.04,-0.08);
-add(rif,bx(0.04,0.14,0.06),MG,0,-0.12,0.28);
+// ── STAFF WEAPON ─────────────────────────────────────────────────
+var MAC = new THREE.MeshStandardMaterial({color:0x7a9ab8,roughness:0.2,metalness:0.8});
+var MAC2= new THREE.MeshStandardMaterial({color:0x4a6a88,roughness:0.3,metalness:0.9});
+var MACGLOW=new THREE.MeshBasicMaterial({color:0x00d4ff,transparent:true,opacity:0.9});
+var rif=new THREE.Group();
+// held horizontally in right hand, staff pointing forward
+rif.position.set(0.05,-0.52,0.05);
+rif.rotation.x=-Math.PI/2;
+rif.rotation.z=-0.1;
+
+// ── Long shaft ──
+var shaft=new THREE.Mesh(cy(0.018,0.022,1.6,8),MAC);
+shaft.position.y=0.2; rif.add(shaft);
+
+// ── Grip wrap (hand area) ──
+var grip=new THREE.Mesh(cy(0.026,0.026,0.18,8),MAC2); grip.position.y=-0.18; rif.add(grip);
+var g1=new THREE.Mesh(cy(0.028,0.028,0.03,8),MAC2); g1.position.y=-0.10; rif.add(g1);
+var g2=new THREE.Mesh(cy(0.028,0.028,0.03,8),MAC2); g2.position.y=-0.26; rif.add(g2);
+
+// ── Neck/collar before head ──
+var neck=new THREE.Mesh(cy(0.032,0.02,0.1,8),MAC2); neck.position.y=1.02; rif.add(neck);
+
+// ── Circle/ring head at top ──
+var ring1=new THREE.Mesh(new THREE.TorusGeometry(0.12,0.018,10,32),MAC);
+ring1.position.y=1.18; rif.add(ring1);
+// second inner ring (thinner)
+var ring2=new THREE.Mesh(new THREE.TorusGeometry(0.075,0.010,8,28),MAC2);
+ring2.position.y=1.18; ring2.rotation.z=Math.PI/4; rif.add(ring2);
+// glowing orb at centre of ring
+var orb=new THREE.Mesh(new THREE.SphereGeometry(0.038,12,12),MACGLOW);
+orb.position.y=1.18; rif.add(orb);
+// orb glow light
+var orbL=new THREE.PointLight(0x00d4ff,3,2.5); orbL.position.y=1.18; rif.add(orbL);
+// small connector spikes on ring
+for(var ri2=0;ri2<4;ri2++){
+  var ra=(ri2/4)*Math.PI*2;
+  var spk=new THREE.Mesh(new THREE.ConeGeometry(0.009,0.055,4),MAC2);
+  spk.position.set(Math.cos(ra)*0.12,1.18+Math.sin(ra)*0.12,0);
+  spk.rotation.z=ra-Math.PI/2; rif.add(spk);
+}
+
+// ── Bottom pommel ──
+var pom=new THREE.Mesh(new THREE.SphereGeometry(0.032,8,8),MAC2); pom.position.y=-0.62; rif.add(pom);
+
 rArm.add(rif); sRoot.add(rArm);
 
 var lLeg=new THREE.Group(); lLeg.position.set(-0.17,1.44,0);
