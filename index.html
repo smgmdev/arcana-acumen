@@ -112,7 +112,7 @@ canvas { display:block; }
 
 /* ── TARGET LOCK BOXES ──────────────────────── */
 .tbox {
-  position:fixed; width:155px; pointer-events:none;
+  position:fixed; width:100px; pointer-events:none;
   opacity:0; transition:opacity 0.2s;
   font-family:Arial,sans-serif;
   transform:translate(0,-50%);
@@ -138,11 +138,11 @@ canvas { display:block; }
 .tbox-corner-tr { top:-1px; right:-1px; border-width:2px 2px 0 0; }
 .tbox-corner-bl { bottom:-1px; left:-1px; border-width:0 0 2px 2px; }
 
-.tbox-label { font-size:0.52rem; letter-spacing:0.18em; color:#ef4444; text-transform:uppercase; margin-bottom:6px; }
-.tbox-type  { font-size:1.05rem; font-weight:900; color:#fff; letter-spacing:0.1em; margin:4px 0; }
-.tbox-icon  { font-size:1.6rem; text-align:center; margin:4px 0; }
-.tbox-status{ font-size:0.55rem; letter-spacing:0.15em; color:rgba(255,255,255,0.5); margin-top:6px; animation:tpulse 0.8s infinite; }
-.tbox-elim  { font-size:0.6rem; letter-spacing:0.15em; color:#22c55e; font-weight:800; margin-top:6px; display:none; }
+.tbox-label { font-size:0.38rem; letter-spacing:0.12em; color:#ef4444; text-transform:uppercase; margin-bottom:2px; }
+.tbox-type  { font-size:0.6rem; font-weight:900; color:#fff; letter-spacing:0.08em; margin:2px 0; }
+.tbox-icon  { display:none; }
+.tbox-status{ font-size:0.38rem; letter-spacing:0.1em; color:rgba(255,255,255,0.5); margin-top:3px; animation:tpulse 0.8s infinite; }
+.tbox-elim  { font-size:0.38rem; letter-spacing:0.1em; color:#22c55e; font-weight:800; margin-top:3px; display:none; }
 @keyframes tpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 .tbox.eliminated .tbox-label  { color:#22c55e; }
 .tbox.eliminated .tbox-frame  { border-color:rgba(34,197,94,0.7); }
@@ -570,7 +570,7 @@ function assignSlot(threat) {
   const _sx = (_v.x + 1) / 2 * window.innerWidth;
   const _sy = -(_v.y - 1) / 2 * window.innerHeight;
   const _onRight = _sx > window.innerWidth * 0.5;
-  box.style.left = (_onRight ? _sx - 175 : _sx + 48) + 'px';
+  box.style.left = (_onRight ? _sx - 112 : _sx + 16) + 'px';
   box.style.top  = _sy + 'px';
   box.classList.remove('eliminated');
   box.classList.add('visible');
