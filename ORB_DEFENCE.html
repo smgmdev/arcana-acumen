@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAE Orbital Defence Grid — AI Intercept System</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; overflow:hidden; font-family:'Courier New',monospace; }
+canvas { display:block; }
+
+#hud {
+  position:fixed; inset:0; pointer-events:none;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.hud-top {
+  padding:1.5rem 2rem;
+  display:flex; justify-content:space-between; align-items:flex-start;
+}
+.hud-title { font-size:0.7rem; letter-spacing:0.2em; color:#a78bfa; text-transform:uppercase; }
+.hud-name { font-size:1.3rem; font-weight:900; color:#fff; margin-top:0.2rem; letter-spacing:0.05em; }
+.hud-right { text-align:right; display:flex; flex-direction:column; gap:0.4rem; }
+.hud-stat { font-size:0.65rem; letter-spacing:0.12em; color:rgba(255,255,255,0.4); text-transform:uppercase; }
+.hud-stat-val { font-size:1.1rem; font-weight:900; color:#22c55e; }
+.hud-stat-danger { color:#ef4444; }
+
+.hud-bottom {
+  padding:1.2rem 2rem;
+  display:flex; align-items:center; gap:2rem;
+  background:linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+}
+.bottom-item { }
+.bi-label { font-size:0.58rem; letter-spacing:0.15em; text-transform:uppercase; color:rgba(255,255,255,0.3); }
+.bi-val { font-size:0.85rem; font-weight:700; color:#a78bfa; margin-top:0.1rem; }
+.bi-val.green { color:#22c55e; }
+.bi-val.red { color:#ef4444; }
+
+.orb-dots { display:flex; gap:4px; margin-top:0.3rem; }
+.o-dot { width:7px; height:7px; border-radius:50%; background:#7c3aed; transition:all 0.2s; }
+.o-dot.ok { background:#22c55e; box-shadow:0 0 6px #22c55e; }
+.o-dot.fire { background:#ef4444; box-shadow:0 0 8px #ef4444; animation:fpulse 0.3s infinite; }
+
+@keyframes fpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+#alert {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  border:1px solid rgba(239,68,68,0.6); border-radius:6px;
+  padding:0.7rem 2rem; background:rgba(239,68,68,0.1);
+  backdrop-filter:blur(8px);
+  font-size:0.85rem; letter-spacing:0.2em; color:#fca5a5; font-weight:800;
+  opacity:0; transition:opacity 0.15s; pointer-events:none; text-align:center;
+}
+#alert.show { opacity:1; }
+
+#intercept-msg {
+  position:fixed; top:44%; left:50%; transform:translate(-50%,-50%);
+  font-size:0.8rem; letter-spacing:0.2em; color:#22c55e; font-weight:800;
+  opacity:0; transition:opacity 0.1s; pointer-events:none;
+}
+#intercept-msg.show { opacity:1; }
+
+.corner { position:fixed; width:28px; height:28px; border-color:rgba(124,58,237,0.5); border-style:solid; }
+.c-tl { top:12px; left:12px; border-width:2px 0 0 2px; }
+.c-tr { top:12px; right:12px; border-width:2px 2px 0 0; }
+.c-bl { bottom:12px; left:12px; border-width:0 0 2px 2px; }
+.c-br { bottom:12px; right:12px; border-width:0 2px 2px 0; }
+
+#scan-line {
+  position:fixed; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, rgba(124,58,237,0.4), transparent);
+  animation:scanmove 3s linear infinite; pointer-events:none;
+}
+@keyframes scanmove { 0%{top:0} 100%{top:100%} }
+</style>
+</head>
+<body>
+
+<div id="container"></div>
+
+<div id="hud">
+  <div class="hud-top">
+    <div>
+      <div class="hud-title">// UAE Orbital Defence Grid v2.1</div>
+      <div class="hud-name">AI INTERCEPT SYSTEM</div>
+    </div>
+    <div class="hud-right">
+      <div>
+        <div class="hud-stat">Threats Intercepted</div>
+        <div class="hud-stat-val" id="count">0</div>
+      </div>
+      <div>
+        <div class="hud-stat">Airspace Status</div>
+        <div class="hud-stat-val" id="status">SECURE</div>
+      </div>
+    </div>
+  </div>
+  <div class="hud-bottom">
+    <div class="bottom-item">
+      <div class="bi-label">Orbs Online</div>
+      <div class="bi-val green" id="orbs-online">12 / 12</div>
+    </div>
+    <div class="bottom-item">
+      <div class="bi-label">Active Lasers</div>
+      <div class="bi-val" id="laser-active">0</div>
+    </div>
+    <div class="bottom-item">
+      <div class="bi-label">AI Mode</div>
+      <div class="bi-val" id="ai-mode">SCANNING</div>
+    </div>
+    <div class="bottom-item" style="margin-left:auto">
+      <div class="bi-label">Orb Status</div>
+      <div class="orb-dots" id="orb-dots"></div>
+    </div>
+  </div>
+</div>
+
+<div id="alert">⚠&nbsp; THREAT DETECTED — LASER ENGAGING</div>
+<div id="intercept-msg">✓ TARGET ELIMINATED</div>
+
+<div class="corner c-tl"></div>
+<div class="corner c-tr"></div>
+<div class="corner c-bl"></div>
+<div class="corner c-br"></div>
+<div id="scan-line"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+// =============================================
+// UAE ORB DEFENCE GRID — Three.js 3D Simulation
+// =============================================
+
+const W = window.innerWidth, H = window.innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.getElementById('container').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x010208);
+scene.fog = new THREE.FogExp2(0x010208, 0.008);
+
+const camera = new THREE.PerspectiveCamera(55, W/H, 0.1, 400);
+camera.position.set(0, 50, 40);
+camera.lookAt(0, 0, 0);
+
+// ── LIGHTS ──────────────────────────────────
+scene.add(new THREE.AmbientLight(0x1a1040, 4));
+const sunLight = new THREE.DirectionalLight(0xffeedd, 0.5);
+sunLight.position.set(20, 40, -20);
+scene.add(sunLight);
+const purpleGlow = new THREE.PointLight(0x7c3aed, 4, 80);
+purpleGlow.position.set(0, 25, 0);
+scene.add(purpleGlow);
+
+// ── STARS ────────────────────────────────────
+(function buildStars() {
+  const n = 4000, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    const r  = 180 + Math.random() * 40;
+    pos[i*3]   = r * Math.sin(ph) * Math.cos(th);
+    pos[i*3+1] = Math.abs(r * Math.cos(ph));
+    pos[i*3+2] = r * Math.sin(ph) * Math.sin(th);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(geo,
+    new THREE.PointsMaterial({ color: 0xffffff, size: 0.25, transparent: true, opacity: 0.9 })
+  ));
+})();
+
+// ── UAE BORDER SHAPE ─────────────────────────
+// Accurate border vertices [x, z] (1 unit ≈ 12 km, N=-z, E=+x, centered on UAE)
+// Traced clockwise from NW (Abu Dhabi coast entry)
+const UAE_PTS = [
+  [-12,  -7],  // Abu Dhabi NW coast (near Qatar sea border)
+  [-10, -10],  // Abu Dhabi west coast
+  [ -6, -13],  // Abu Dhabi Ruwais coast
+  [ -1, -15],  // Abu Dhabi main coast (Mirfa-Jebel Ali)
+  [  4, -15],  // Dubai coast start
+  [  7, -14],  // Dubai port area
+  [ 10, -13],  // Sharjah coast
+  [ 12, -11],  // Ajman / UAQ coast
+  [ 13,  -9],  // Ras Al Khaimah coast
+  [ 14,  -8],  // RAK north tip
+  [ 17,  -6],  // NE — Fujairah north (Gulf of Oman)
+  [ 19,  -2],  // Fujairah upper east coast
+  [ 18,   3],  // Fujairah middle coast
+  [ 15,   8],  // Fujairah south / Oman border
+  [ 10,  14],  // SE inland (Oman/Saudi tri-border)
+  [  2,  16],  // South center (Saudi border)
+  [ -6,  15],  // South-southwest (Saudi)
+  [-14,  11],  // Southwest (Saudi)
+  [-17,   4],  // West border (Saudi)
+  [-15,  -2],  // NW border (near Qatar)
+  [-12,  -7],  // Close
+];
+
+// Land shape (flat)
+const shape = new THREE.Shape();
+shape.moveTo(UAE_PTS[0][0], UAE_PTS[0][1]);
+for (let i = 1; i < UAE_PTS.length; i++) shape.lineTo(UAE_PTS[i][0], UAE_PTS[i][1]);
+
+// Extruded land
+const extGeo = new THREE.ExtrudeGeometry(shape, { depth: 0.5, bevelEnabled: false });
+extGeo.rotateX(-Math.PI / 2);
+extGeo.translate(0, 0.02, 0);
+const land = new THREE.Mesh(extGeo,
+  new THREE.MeshStandardMaterial({
+    color: 0xc8924a, emissive: 0x3a1f08, emissiveIntensity: 0.4,
+    roughness: 1, metalness: 0
+  })
+);
+scene.add(land);
+
+// Glowing border line
+const bPts = UAE_PTS.map(p => new THREE.Vector3(p[0], 0.08, p[1]));
+const bGeo = new THREE.BufferGeometry().setFromPoints(bPts);
+scene.add(new THREE.Line(bGeo,
+  new THREE.LineBasicMaterial({ color: 0xf97316 })
+));
+
+// Sea floor
+const seaGeo = new THREE.PlaneGeometry(300, 300);
+seaGeo.rotateX(-Math.PI / 2);
+const seaMesh = new THREE.Mesh(seaGeo,
+  new THREE.MeshStandardMaterial({
+    color: 0x060e1c, emissive: 0x030810, emissiveIntensity: 0.8, roughness: 1,
+    polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1
+  })
+);
+seaMesh.position.y = -0.05;
+scene.add(seaMesh);
+
+// Grid
+const grid = new THREE.GridHelper(300, 60, 0x0a1830, 0x0a1830);
+grid.position.y = -0.15;
+grid.material.transparent = true;
+grid.material.opacity = 0.5;
+scene.add(grid);
+
+// ── CITY MARKERS ──────────────────────────────
+// Accurate positions: Abu Dhabi, Dubai, Burj Khalifa
+const CITY_DATA = [
+  { id: 'city-abudhabi',  label: 'ABU DHABI',    x:  -3, z: -12, color: 0xffd700, type: 'city' },
+  { id: 'city-dubai',     label: 'DUBAI',         x:   6, z: -13, color: 0x00d4ff, type: 'city' },
+  { id: 'city-burj',      label: 'BURJ KHALIFA',  x:   6.5, z: -11.5, color: 0xff6600, type: 'tower' },
+];
+
+const cityMeshes = [];
+
+CITY_DATA.forEach(c => {
+  if (c.type === 'tower') {
+    // Tall spire for Burj Khalifa
+    const base = new THREE.CylinderGeometry(0.12, 0.2, 3.5, 8);
+    const tip  = new THREE.CylinderGeometry(0,    0.12, 1.2, 8);
+    const bMat = new THREE.MeshBasicMaterial({ color: c.color });
+    const bMesh = new THREE.Mesh(base, bMat);
+    bMesh.position.set(c.x, 1.75 + 0.02, c.z);
+    scene.add(bMesh);
+    const tMesh = new THREE.Mesh(tip, bMat);
+    tMesh.position.set(c.x, 3.5 + 0.6 + 0.02, c.z);
+    scene.add(tMesh);
+    const glow = new THREE.PointLight(c.color, 4, 8);
+    glow.position.set(c.x, 4.5, c.z);
+    scene.add(glow);
+    // Pulse ring on ground
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.4, 0.55, 24),
+      new THREE.MeshBasicMaterial({ color: c.color, transparent: true, opacity: 0.6, side: THREE.DoubleSide })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(c.x, 0.04, c.z);
+    scene.add(ring);
+    cityMeshes.push({ pos: new THREE.Vector3(c.x, 4.8, c.z), id: c.id, label: c.label, color: c.color });
+  } else {
+    // City dot
+    const g = new THREE.SphereGeometry(0.45, 10, 10);
+    const m = new THREE.MeshBasicMaterial({ color: c.color });
+    const mesh = new THREE.Mesh(g, m);
+    mesh.position.set(c.x, 0.55, c.z);
+    scene.add(mesh);
+    // Outer pulse ring
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.7, 0.88, 24),
+      new THREE.MeshBasicMaterial({ color: c.color, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(c.x, 0.04, c.z);
+    scene.add(ring);
+    const light = new THREE.PointLight(c.color, 3, 8);
+    light.position.copy(mesh.position);
+    scene.add(light);
+    cityMeshes.push({ pos: new THREE.Vector3(c.x, 1.2, c.z), id: c.id, label: c.label, color: c.color });
+  }
+});
+
+// Create HTML label divs for city names
+cityMeshes.forEach(c => {
+  const div = document.createElement('div');
+  div.id = c.id;
+  div.style.cssText = `position:fixed;pointer-events:none;z-index:50;font-family:'Courier New',monospace;font-size:0.6rem;font-weight:800;letter-spacing:0.15em;color:#${c.color.toString(16).padStart(6,'0')};text-shadow:0 0 8px #${c.color.toString(16).padStart(6,'0')};transform:translate(-50%,-100%);margin-top:-6px;white-space:nowrap;`;
+  div.textContent = c.label;
+  document.body.appendChild(div);
+});
+
+// ── ORBS ─────────────────────────────────────
+const ORB_POS = [
+  [-18,  8,  3],   // West border (Saudi)
+  [-16,  8, -9],   // NW Abu Dhabi coast
+  [ -4,  8,-19],   // North coast W (Abu Dhabi)
+  [  5,  8,-19],   // North coast (Dubai area)
+  [ 11,  8,-16],   // North coast E (Sharjah-RAK)
+  [ 16,  8, -8],   // NE Fujairah approach
+  [ 22,  8,  0],   // East coast (Fujairah)
+  [ 19,  8,  9],   // SE coast
+  [ 10,  8, 18],   // South SE
+  [ -2,  8, 19],   // South center
+  [-13,  8, 13],   // South SW
+  [  1, 13,  1],   // Command orb (center, elevated)
+];
+
+const orbs = [];
+
+function makeOrb(pos, idx) {
+  const grp = new THREE.Group();
+  grp.position.set(...pos);
+
+  const isCmd = (idx === 11);
+  const col = isCmd ? 0xffd700 : 0x7c3aed;
+  const col2 = isCmd ? 0xffe566 : 0xa78bfa;
+
+  // Outer transparent shell
+  const outerGeo = new THREE.SphereGeometry(1.3, 20, 20);
+  const outerMat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.12 });
+  grp.add(new THREE.Mesh(outerGeo, outerMat));
+
+  // Wireframe shell
+  const wireMat = new THREE.MeshBasicMaterial({ color: col2, wireframe: true, transparent: true, opacity: 0.35 });
+  const wireMesh = new THREE.Mesh(outerGeo.clone(), wireMat);
+  grp.add(wireMesh);
+
+  // Inner glowing core
+  const innerGeo = new THREE.SphereGeometry(0.45, 16, 16);
+  const innerMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+  grp.add(innerMesh);
+
+  // Equatorial ring
+  const ringGeo = new THREE.TorusGeometry(1.7, 0.04, 8, 60);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.7 });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = Math.PI / 3;
+  grp.add(ring);
+
+  // Second ring tilted
+  const ring2 = ring.clone();
+  ring2.rotation.x = -Math.PI / 4;
+  ring2.rotation.z = Math.PI / 5;
+  grp.add(ring2);
+
+  // Scan cone downward
+  const coneGeo = new THREE.ConeGeometry(5, 9, 20, 1, true);
+  const coneMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.04, side: THREE.DoubleSide });
+  const cone = new THREE.Mesh(coneGeo, coneMat);
+  cone.position.y = -4.5;
+  grp.add(cone);
+
+  // Vertical tether line to ground
+  const tetherGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -pos[1], 0)
+  ]);
+  const tetherMat = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.15 });
+  grp.add(new THREE.Line(tetherGeo, tetherMat));
+
+  // Orb point light
+  const light = new THREE.PointLight(col, 2.5, 18);
+  grp.add(light);
+
+  scene.add(grp);
+
+  return {
+    grp, wireMesh, innerMesh, innerMat, outerMat, ring, ring2, cone, coneMat, light,
+    baseY: pos[1], phase: Math.random() * Math.PI * 2,
+    firingAt: null, idx, isCmd
+  };
+}
+
+ORB_POS.forEach((p, i) => orbs.push(makeOrb(p, i)));
+
+// Orb dots in HUD
+const dotsWrap = document.getElementById('orb-dots');
+orbs.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'o-dot ok';
+  d.id = 'od' + i;
+  dotsWrap.appendChild(d);
+});
+
+// ── ORB NETWORK LINES ──────────────────────
+// Connect nearby orbs with faint lines
+for (let i = 0; i < orbs.length - 1; i++) {
+  for (let j = i+1; j < orbs.length; j++) {
+    const a = new THREE.Vector3(...ORB_POS[i]);
+    const b = new THREE.Vector3(...ORB_POS[j]);
+    if (a.distanceTo(b) < 22) {
+      const g = new THREE.BufferGeometry().setFromPoints([a, b]);
+      scene.add(new THREE.Line(g,
+        new THREE.LineBasicMaterial({ color: 0x4c1d95, transparent: true, opacity: 0.25 })
+      ));
+    }
+  }
+}
+
+// ── THREATS ──────────────────────────────────
+const threats = [];
+let intercepted = 0;
+
+class Threat {
+  constructor() {
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 40 + Math.random() * 10;
+    this.pos = new THREE.Vector3(
+      Math.sin(angle) * dist,
+      9 + Math.random() * 10,
+      Math.cos(angle) * dist
+    );
+    this.target = new THREE.Vector3(
+      (Math.random() - 0.5) * 22,
+      0.5,
+      Math.random() * 20 - 4
+    );
+    this.speed   = 0.07 + Math.random() * 0.05;
+    this.alive   = true;
+    this.tagged  = false;
+    this.orbIdx  = -1;
+
+    const geo = new THREE.OctahedronGeometry(0.7, 0);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+    this.mesh = new THREE.Mesh(geo, mat);
+    this.mesh.position.copy(this.pos);
+
+    // Glow aura
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0xff4400, wireframe: true, transparent: true, opacity: 0.4 });
+    this.mesh.add(new THREE.Mesh(new THREE.OctahedronGeometry(1.1, 0), glowMat));
+
+    this.light = new THREE.PointLight(0xff2200, 4, 10);
+    this.mesh.add(this.light);
+
+    scene.add(this.mesh);
+  }
+
+  update() {
+    if (!this.alive) return;
+    const dir = this.target.clone().sub(this.pos).normalize();
+    this.pos.addScaledVector(dir, this.speed);
+    this.mesh.position.copy(this.pos);
+    this.mesh.rotation.y += 0.06;
+    this.mesh.rotation.x += 0.04;
+    if (this.pos.distanceTo(this.target) < 1.5) this.kill();
+  }
+
+  kill() {
+    if (!this.alive) return;
+    this.alive = false;
+    scene.remove(this.mesh);
+    boom(this.pos.clone());
+  }
+}
+
+// ── EXPLOSIONS ────────────────────────────────
+const booms = [];
+
+function boom(pos) {
+  const n = 100;
+  const positions = new Float32Array(n * 3);
+  const vels = [];
+  for (let i = 0; i < n; i++) {
+    positions[i*3]   = pos.x;
+    positions[i*3+1] = pos.y;
+    positions[i*3+2] = pos.z;
+    vels.push(new THREE.Vector3(
+      (Math.random()-.5)*.5,
+      (Math.random()-.2)*.5,
+      (Math.random()-.5)*.5
+    ));
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const mat = new THREE.PointsMaterial({ color: 0xff6600, size: 0.5, transparent: true, opacity: 1 });
+  const pts = new THREE.Points(geo, mat);
+  scene.add(pts);
+
+  const fl = new THREE.PointLight(0xff6600, 20, 25);
+  fl.position.copy(pos);
+  scene.add(fl);
+
+  booms.push({ pts, geo, vels, mat, fl, t: 0 });
+}
+
+// ── LASERS ─────────────────────────────────────
+const lasers = [];
+
+function fireLaser(orb, threat) {
+  const s = orb.grp.position.clone();
+  const e = threat.pos.clone();
+  const geo = new THREE.BufferGeometry().setFromPoints([s, e]);
+
+  const mat1 = new THREE.LineBasicMaterial({ color: 0x00ffff });
+  const mat2 = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
+
+  const l1 = new THREE.Line(geo, mat1);
+  const l2 = new THREE.Line(geo.clone(), mat2);
+  scene.add(l1); scene.add(l2);
+
+  // Impact spark at orb
+  const sparkGeo = new THREE.SphereGeometry(0.3, 6, 6);
+  const spark = new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+  spark.position.copy(s);
+  scene.add(spark);
+
+  lasers.push({ l1, l2, geo, mat1, mat2, spark, orb, threat, t: 0, life: 30 });
+}
+
+// ── AI LOGIC ────────────────────────────────────
+const DETECT_RANGE = 26;
+let frame = 0;
+const SPAWN_EVERY = 200;
+
+function nearestFreeOrb(threat) {
+  let best = null, bestD = Infinity;
+  orbs.forEach(o => {
+    if (o.firingAt && o.firingAt !== threat) return;
+    const d = o.grp.position.distanceTo(threat.pos);
+    if (d < bestD) { bestD = d; best = o; }
+  });
+  return best;
+}
+
+// ── CAMERA ───────────────────────────────────────
+let camAngle = 0;
+const CAM_R = 58, CAM_H = 42;
+
+// ── ANIMATE ──────────────────────────────────────
+const _tmp = new THREE.Vector3();
+
+function animate() {
+  requestAnimationFrame(animate);
+  frame++;
+  const t = Date.now() * 0.001;
+
+  // Camera orbit
+  camAngle += 0.0018;
+  camera.position.set(
+    Math.sin(camAngle) * CAM_R,
+    CAM_H + Math.sin(t * 0.08) * 3,
+    Math.cos(camAngle) * CAM_R
+  );
+  camera.lookAt(0, 3, 0);
+
+  // Update city label screen positions
+  cityMeshes.forEach(c => {
+    const v = c.pos.clone().project(camera);
+    const sx = (v.x + 1) / 2 * window.innerWidth;
+    const sy = -(v.y - 1) / 2 * window.innerHeight;
+    const el = document.getElementById(c.id);
+    if (el) { el.style.left = sx + 'px'; el.style.top = sy + 'px'; }
+  });
+
+  // Orbs
+  orbs.forEach((o, i) => {
+    o.grp.position.y = o.baseY + Math.sin(t * 1.3 + o.phase) * 0.9;
+    o.wireMesh.rotation.y += 0.008;
+    o.wireMesh.rotation.x += 0.005;
+    o.ring.rotation.z  += 0.025;
+    o.ring2.rotation.y += 0.02;
+    o.cone.rotation.y  += 0.015;
+    o.light.intensity = 2.5 + Math.sin(t * 4 + o.phase) * 0.7;
+
+    if (!o.firingAt || !o.firingAt.alive) {
+      if (o.firingAt) {
+        o.firingAt = null;
+        o.innerMat.color.setHex(0xffffff);
+        o.outerMat.opacity = 0.12;
+        o.coneMat.color.setHex(0x22c55e);
+        document.getElementById('od'+i).className = 'o-dot ok';
+      }
+    }
+  });
+
+  // Spawn threats
+  if (frame % SPAWN_EVERY === 0) {
+    const th = new Threat();
+    threats.push(th);
+    document.getElementById('alert').classList.add('show');
+    document.getElementById('status').textContent = 'THREAT';
+    document.getElementById('status').className = 'hud-stat-val hud-stat-danger';
+    document.getElementById('ai-mode').textContent = 'ENGAGING';
+    document.getElementById('ai-mode').className = 'bi-val red';
+    setTimeout(() => document.getElementById('alert').classList.remove('show'), 1800);
+  }
+
+  // Update threats + AI detection
+  threats.forEach(th => {
+    th.update();
+    if (!th.alive || th.tagged) return;
+    const orb = nearestFreeOrb(th);
+    if (!orb) return;
+    if (orb.grp.position.distanceTo(th.pos) < DETECT_RANGE) {
+      th.tagged = true;
+      th.orbIdx = orb.idx;
+      orb.firingAt = th;
+      orb.innerMat.color.setHex(0xff4400);
+      orb.outerMat.opacity = 0.35;
+      orb.coneMat.color.setHex(0xff4400);
+      document.getElementById('od'+orb.idx).className = 'o-dot fire';
+      fireLaser(orb, th);
+    }
+  });
+
+  // Clean dead threats
+  for (let i = threats.length - 1; i >= 0; i--) {
+    if (!threats[i].alive) threats.splice(i, 1);
+  }
+
+  // Lasers
+  let laserCount = 0;
+  for (let i = lasers.length - 1; i >= 0; i--) {
+    const lr = lasers[i];
+    lr.t++;
+
+    if (lr.t >= lr.life) {
+      scene.remove(lr.l1); scene.remove(lr.l2); scene.remove(lr.spark);
+      if (lr.threat.alive) {
+        lr.threat.kill();
+        intercepted++;
+        document.getElementById('count').textContent = intercepted;
+        const msg = document.getElementById('intercept-msg');
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 900);
+        if (threats.filter(t => t.alive).length === 0) {
+          setTimeout(() => {
+            document.getElementById('status').textContent = 'SECURE';
+            document.getElementById('status').className = 'hud-stat-val';
+            document.getElementById('ai-mode').textContent = 'SCANNING';
+            document.getElementById('ai-mode').className = 'bi-val green';
+          }, 600);
+        }
+      }
+      lasers.splice(i, 1);
+      continue;
+    }
+
+    // Track threat
+    if (lr.threat.alive) {
+      lr.orb.grp.getWorldPosition(_tmp);
+      const arr = lr.geo.attributes.position.array;
+      arr[0] = _tmp.x; arr[1] = _tmp.y; arr[2] = _tmp.z;
+      arr[3] = lr.threat.pos.x; arr[4] = lr.threat.pos.y; arr[5] = lr.threat.pos.z;
+      lr.geo.attributes.position.needsUpdate = true;
+      lr.l2.geometry.attributes.position.array.set(arr);
+      lr.l2.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // Fade out
+    const fade = 1 - lr.t / lr.life;
+    lr.mat1.transparent = true; lr.mat1.opacity = 0.5 + fade * 0.5;
+    lr.mat2.opacity = fade * 0.4;
+    lr.spark.material.opacity = fade;
+    laserCount++;
+  }
+
+  document.getElementById('laser-active').textContent = laserCount;
+
+  // Explosions
+  for (let i = booms.length - 1; i >= 0; i--) {
+    const b = booms[i];
+    b.t++;
+    const arr = b.geo.attributes.position.array;
+    for (let j = 0; j < b.vels.length; j++) {
+      arr[j*3]   += b.vels[j].x;
+      arr[j*3+1] += b.vels[j].y;
+      arr[j*3+2] += b.vels[j].z;
+      b.vels[j].y -= 0.006;
+    }
+    b.geo.attributes.position.needsUpdate = true;
+    const life = b.t / 70;
+    b.mat.opacity = 1 - life;
+    b.fl.intensity = 20 * (1 - life);
+    if (b.t >= 70) { scene.remove(b.pts); scene.remove(b.fl); booms.splice(i, 1); }
+  }
+
+  // Pulsing global purple light
+  purpleGlow.intensity = 3 + Math.sin(t * 2) * 1;
+
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+animate();
+</script>
+
+
+<!-- BURGER MENU -->
+<style>
+.bm-btn { position:fixed; bottom:2rem; right:2rem; z-index:999; width:52px; height:52px; border-radius:50%; background:#7c3aed; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; box-shadow:0 4px 20px rgba(124,58,237,0.5); pointer-events:all; }
+.bm-btn span { display:block; width:20px; height:2px; background:#fff; border-radius:2px; transition:all 0.3s; }
+.bm-btn.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+.bm-btn.open span:nth-child(2) { opacity:0; }
+.bm-btn.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+.burger-menu { position:fixed; bottom:6rem; right:2rem; z-index:998; background:#05030f; border:1px solid rgba(124,58,237,0.4); border-radius:16px; padding:1rem; width:300px; box-shadow:0 8px 40px rgba(0,0,0,0.9); display:none; flex-direction:column; gap:0.3rem; pointer-events:all; max-height:80vh; overflow-y:auto; }
+.burger-menu.open { display:flex; }
+.bml { font-size:0.62rem; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.3); padding:0.3rem 0.8rem 0.6rem; font-family:'Courier New',monospace; }
+.burger-menu a { display:flex; align-items:center; gap:0.7rem; padding:0.6rem 0.8rem; border-radius:8px; color:rgba(255,255,255,0.7); text-decoration:none; font-size:0.84rem; transition:background 0.15s; }
+.burger-menu a:hover { background:rgba(124,58,237,0.2); color:#fff; }
+.burger-menu a.active-report { background:rgba(124,58,237,0.25); color:#a78bfa; }
+.burger-menu a span { font-size:1rem; }
+</style>
+<button class="bm-btn" id="bmBtn" onclick="this.classList.toggle('open'); document.getElementById('burgerMenu').classList.toggle('open');">
+  <span></span><span></span><span></span>
+</button>
+<div class="burger-menu" id="burgerMenu">
+  <div class="bml">// Reports</div>
+  <a href="index.html"><span>🛰️</span> Project MAX — Palantir Takedown</a>
+  <a href="PALANTIR_OFFERINGS.html"><span>🔍</span> Palantir Service Offerings</a>
+  <a href="PALANTIR_REPLICATION_TARGETS.html"><span>💰</span> Replication Targets</a>
+  <a href="SOVEREIGN_REPLICATION.html"><span>⚡</span> Sovereign Stack Deep Dive</a>
+  <a href="SATELLITE_BRIEF.html"><span>📡</span> Satellite Brief</a>
+  <a href="REALTIME_SATELLITE.html"><span>🔭</span> Real-Time Satellite Vision</a>
+  <a href="PALANTIR_ACCESS_MAP.html"><span>🌍</span> Palantir Access Map</a>
+  <a href="NO_SATELLITE_STACK.html"><span>🟢</span> No Satellite Stack</a>
+  <a href="UKRAINE_DEFENCE_AI.html"><span>🇺🇦</span> Ukraine Defence AI</a>
+  <a href="SENTINEL_AI_RD_Investor_Report.html"><span>🔴</span> Sentinel AI R&D</a>
+  <a href="SINGAPORE_GULF_ANALYSIS.html"><span>🌏</span> Singapore &amp; Gulf Analysis</a>
+  <a href="SOVEREIGN_AI_PRODUCT.html"><span>🧠</span> The Product They Can't Refuse</a>
+  <a href="SWARM_BRAIN.html"><span>🎯</span> Swarm Brain — Ukraine</a>
+  <a href="PREDICTIVE_INTEL.html"><span>🔮</span> Predictive Offensive Intel</a>
+  <a href="BORDER_INTELLIGENCE.html"><span>👁️</span> Autonomous Border Intel</a>
+  <a href="ORB_DEFENCE.html" class="active-report"><span>🛡️</span> Orb Defence — UAE 3D AI Grid</a>
+</div>
+
+</body>
+</html>
