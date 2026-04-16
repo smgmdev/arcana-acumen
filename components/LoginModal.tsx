@@ -39,7 +39,25 @@ export default function LoginModal() {
 
   return (
     <div className="auth-overlay active">
-      <div className="auth-box">
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }}>
+        <span style={{
+          fontSize: 'clamp(16rem, 50vw, 40rem)',
+          fontWeight: 900,
+          color: 'rgba(255,255,255,0.03)',
+          letterSpacing: '-0.05em',
+          lineHeight: 1,
+          userSelect: 'none',
+        }}>GOV</span>
+      </div>
+      <div className="auth-box" style={{ position: 'relative', zIndex: 1 }}>
         <div className="auth-heading">Log into Arcana Government Services</div>
         <div className="auth-sub">You will need your access code to log in.</div>
         <div className="auth-input-wrap">
