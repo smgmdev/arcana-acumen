@@ -17,7 +17,7 @@ html, body { width:100%; height:100%; background:#050810; font-family:Arial,sans
 html, body { background-color:#0a0a0a; background-image:url('bg-pattern.svg'); background-repeat:repeat; background-size:111px 65px; }
 
 /* content */
-#page { position:fixed; inset:0; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; }
+#page { position:fixed; inset:0; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; visibility:hidden; opacity:0; }
 
 
 
@@ -215,11 +215,14 @@ window.addEventListener('load', function(){
   if (!sessionStorage.getItem('am_key')) {
     document.getElementById('auth-overlay').classList.add('active');
     setTimeout(function(){ document.getElementById('auth-input').focus(); }, 80);
+  } else {
+    var p=document.getElementById('page');p.style.visibility='visible';p.style.opacity='1';
   }
 });
 
 function closeAuth() {
   document.getElementById('auth-overlay').classList.remove('active');
+  var p=document.getElementById('page');p.style.visibility='visible';p.style.opacity='1';
 }
 
 // Enter key submits
