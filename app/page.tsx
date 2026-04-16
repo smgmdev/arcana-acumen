@@ -32,8 +32,7 @@ export default async function HomePage() {
 
       {/* Main content */}
       <div id="page">
-        {isLoggedIn && (
-          <div style={{
+        <div style={{
             position: 'fixed',
             inset: 0,
             display: 'flex',
@@ -51,7 +50,6 @@ export default async function HomePage() {
               userSelect: 'none',
             }}>GOV</span>
           </div>
-        )}
         <div className="btn-row" style={{ marginTop: '2.4rem', position: 'relative', zIndex: 1 }}>
           {isLoggedIn ? (
             <>
