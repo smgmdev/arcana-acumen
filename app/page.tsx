@@ -44,7 +44,27 @@ export default async function HomePage() {
 
       {/* Main content */}
       <div id="page">
-        <div className="btn-row" style={{ marginTop: '2.4rem' }}>
+        {isLoggedIn && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}>
+            <span style={{
+              fontSize: 'clamp(12rem, 30vw, 22rem)',
+              fontWeight: 900,
+              color: 'rgba(255,255,255,0.03)',
+              letterSpacing: '-0.05em',
+              lineHeight: 1,
+              userSelect: 'none',
+            }}>GOV</span>
+          </div>
+        )}
+        <div className="btn-row" style={{ marginTop: '2.4rem', position: 'relative', zIndex: 1 }}>
           {isLoggedIn ? (
             <>
               <Link href="/orbital" className="btn">
