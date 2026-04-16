@@ -28,18 +28,6 @@ export default async function HomePage() {
             opacity: 0.4,
           }}
         />
-        <span
-          className="main-sub"
-          style={{
-            fontSize: '1.6rem',
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.4)',
-            alignSelf: 'flex-end',
-            paddingBottom: '0.15rem',
-          }}
-        >
-          Government Services
-        </span>
       </div>
 
       {/* Main content */}
