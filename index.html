@@ -74,12 +74,8 @@ html, body { background-color:#0a0a0a; background-image:url('bg-pattern.svg'); b
 }
 /* input form */
 #auth-box { gap:1.1rem; }
-#auth-input-wrap { position:relative; width:100%; }
-#auth-input-wrap::before {
-  content:'\2022\2022\2022';
-  position:absolute; left:0.85rem; top:50%; transform:translateY(-50%);
-  color:rgba(255,255,255,0.35); font-size:0.7rem; letter-spacing:0.15em; pointer-events:none;
-}
+#auth-input-wrap { position:relative; width:100%; display:flex; align-items:center; }
+#auth-input-icon { position:absolute; left:0.7rem; height:18px; opacity:0.5; filter:brightness(0) invert(1); pointer-events:none; }
 #auth-input {
   width:100%; background:#111520; border:1px solid rgba(255,255,255,0.15);
   color:#fff; font-size:0.95rem; font-family:Arial,sans-serif; letter-spacing:0.04em;
