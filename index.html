@@ -100,6 +100,11 @@ canvas#bgc { display:block; width:100%; height:100%; }
   align-self:flex-start; transition:background 0.15s;
 }
 #auth-submit:hover { background:#ffd740; }
+#auth-back {
+  font-size:0.8rem; color:rgba(255,255,255,0.35); cursor:pointer;
+  transition:color 0.15s;
+}
+#auth-back:hover { color:rgba(255,255,255,0.7); }
 .btn { cursor:pointer; }
 
 /* buttons */
@@ -206,7 +211,10 @@ canvas#bgc { display:block; width:100%; height:100%; }
     <div id="auth-step2">
       <input id="auth-input" type="password" placeholder="Enter access code" autocomplete="off" spellcheck="false">
       <div id="auth-err">Invalid access code</div>
-      <button id="auth-submit" onclick="verifyPassword()">Confirm</button>
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button id="auth-submit" onclick="verifyPassword()">Confirm</button>
+        <span id="auth-back" onclick="backToStep1()">&#8592; Back</span>
+      </div>
     </div>
 
   </div>
@@ -280,6 +288,14 @@ function showAuthInput() {
   document.getElementById('auth-step2').classList.add('visible');
   document.getElementById('auth-sub').textContent = 'Enter your access code below.';
   setTimeout(function(){ document.getElementById('auth-input').focus(); }, 60);
+}
+
+function backToStep1() {
+  document.getElementById('auth-step2').classList.remove('visible');
+  document.getElementById('auth-step1').style.display = 'block';
+  document.getElementById('auth-sub').textContent = 'You will need your access code to log in.';
+  document.getElementById('auth-err').style.display = 'none';
+  document.getElementById('auth-input').value = '';
 }
 
 function closeAuth() {
