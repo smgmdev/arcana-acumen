@@ -43,7 +43,7 @@ export default async function HomePage() {
             zIndex: 0,
           }}>
             <span style={{
-              fontSize: 'clamp(12rem, 30vw, 22rem)',
+              fontSize: 'clamp(16rem, 50vw, 40rem)',
               fontWeight: 900,
               color: 'rgba(255,255,255,0.03)',
               letterSpacing: '-0.05em',
