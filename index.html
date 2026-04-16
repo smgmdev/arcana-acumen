@@ -74,13 +74,20 @@ html, body { background-color:#0a0a0a; background-image:url('bg-pattern.svg'); b
 }
 /* input form */
 #auth-box { gap:1.1rem; }
-#auth-input {
-  width:100%; background:transparent; border:none;
-  border-bottom:1px solid rgba(37,99,235,0.7);
-  color:#fff; font-size:1rem; letter-spacing:0.08em;
-  padding:0.55rem 0; outline:none; caret-color:#2563eb;
+#auth-input-wrap { position:relative; width:100%; }
+#auth-input-wrap::before {
+  content:'\2022\2022\2022';
+  position:absolute; left:0.85rem; top:50%; transform:translateY(-50%);
+  color:rgba(255,255,255,0.35); font-size:0.7rem; letter-spacing:0.15em; pointer-events:none;
 }
-#auth-input::placeholder { color:rgba(255,255,255,0.25); font-size:0.85rem; letter-spacing:0.05em; }
+#auth-input {
+  width:100%; background:#111520; border:1px solid rgba(255,255,255,0.15);
+  color:#fff; font-size:0.95rem; font-family:Arial,sans-serif; letter-spacing:0.04em;
+  padding:0.75rem 0.9rem 0.75rem 2.8rem; outline:none; caret-color:#2563eb;
+  transition:border-color 0.15s;
+}
+#auth-input:focus { border-color:rgba(37,99,235,0.8); }
+#auth-input::placeholder { color:rgba(255,255,255,0.3); font-size:0.9rem; font-family:Arial,sans-serif; letter-spacing:0.03em; }
 #auth-err {
   font-size:0.65rem; letter-spacing:0.15em; color:#ff4444;
   text-transform:uppercase; display:none;
