@@ -212,13 +212,14 @@ canvas { display:block; }
       <div class="bi-label">Orb Status</div>
       <div class="orb-dots" id="orb-dots"></div>
     </div>
-    <div class="bottom-item"><a href="/" target="_top" style="color:rgba(255,255,255,0.5);font-family:Arial,sans-serif;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(255,255,255,0.2);padding:4px 10px;border-radius:2px;pointer-events:all;cursor:pointer;">&#8592; Home</a></div>
-    <div class="bottom-item">
-      <a href="/ground-max" target="_top" style="color:#00d4ff;font-family:Arial,sans-serif;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(0,212,255,0.4);padding:4px 10px;border-radius:2px;pointer-events:all;cursor:pointer;">GROUND ORB MAX</a>
-    </div>
   </div>
 </div>
 
+<style>
+#orb-home:hover,#orb-next:hover{color:#fff!important;border-color:#fff!important;}
+</style>
+<a id="orb-home" href="/" target="_top" style="position:fixed;bottom:1.4rem;right:9rem;z-index:100;font-family:Arial,sans-serif;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.4);text-decoration:none;border:1px solid rgba(255,255,255,0.15);padding:5px 12px;border-radius:2px;">&#8592; Home</a>
+<a id="orb-next" href="/ground-max" target="_top" style="position:fixed;bottom:1.4rem;right:1.5rem;z-index:100;font-family:Arial,sans-serif;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.4);text-decoration:none;border:1px solid rgba(255,255,255,0.15);padding:5px 12px;border-radius:2px;">GROUND ORB MAX</a>
 
 <!-- TARGET LOCK BOXES -->
 <div class="tbox tbox-left" id="tbox-left">
