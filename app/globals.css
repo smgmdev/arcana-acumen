@@ -211,7 +211,7 @@ body {
 
 .auth-input {
   width: 100%;
-  background: #111520;
+  background: #000;
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #fff;
   font-size: 0.95rem;
