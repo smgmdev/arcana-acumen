@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
-
 export async function logAccess(label: string, req: Request) {
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  )
   try {
     const geo = await fetch('https://ipapi.co/json/').then(r => r.json()).catch(() => ({}))
     await supabase.from('arcanamace_access_logs').insert({
