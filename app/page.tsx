@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { sessionOptions, SessionData } from '@/lib/auth'
 import LoginModal from '@/components/LoginModal'
+import LogoutButton from '@/components/LogoutButton'
 
 export default async function HomePage() {
   const session = await getIronSession<SessionData>(cookies(), sessionOptions)
@@ -96,6 +97,7 @@ export default async function HomePage() {
 
       {/* Show login modal when not authenticated */}
       {!isLoggedIn && <LoginModal />}
+      {isLoggedIn && <LogoutButton />}
 
       <div
         className="version"
