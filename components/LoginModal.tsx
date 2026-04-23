@@ -51,7 +51,7 @@ export default function LoginModal() {
         <span style={{
           fontSize: 'clamp(16rem, 50vw, 40rem)',
           fontWeight: 900,
-          color: 'rgba(255,255,255,0.03)',
+          color: 'rgba(255,255,255,0.06)',
           letterSpacing: '-0.05em',
           lineHeight: 1,
           userSelect: 'none',

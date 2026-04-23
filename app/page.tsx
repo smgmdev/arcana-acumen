@@ -12,8 +12,8 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Animated scan line */}
-      <div id="scan" />
+      {/* Animated scan line — only before login */}
+      {!isLoggedIn && <div id="scan" />}
 
       {/* Top-left branding */}
       <div className="main-title">
@@ -114,7 +114,7 @@ export default async function HomePage() {
           whiteSpace: 'nowrap',
         }}
       >
-        ARCANA MACE CLASSIFIED
+        ARCANA MACE GOVERNMENT SERVICES
       </div>
     </>
   )
