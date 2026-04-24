@@ -12,6 +12,7 @@ export default function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
+      className="logout-btn"
       style={{
         position: 'fixed',
         top: '1.5rem',

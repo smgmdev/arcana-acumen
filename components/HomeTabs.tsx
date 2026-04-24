@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 type Tab = 'modules' | 'video' | 'docs'
@@ -18,6 +18,20 @@ export default function HomeTabs() {
     setVideoSrc(null)
     setVideoLoading(false)
   }
+
+  useEffect(() => {
+    document.body.classList.toggle('video-modal-open', !!videoSrc)
+    return () => document.body.classList.remove('video-modal-open')
+  }, [videoSrc])
+
+  useEffect(() => {
+    if (!videoSrc) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') closeVideo()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [videoSrc])
 
   return (
     <div className="tabs-wrap">
@@ -154,10 +168,13 @@ export default function HomeTabs() {
           <button
             type="button"
             className="video-modal-close"
-            onClick={closeVideo}
+            onClick={(e) => {
+              e.stopPropagation()
+              closeVideo()
+            }}
             aria-label="Close video"
           >
-            ×
+            Close Video
           </button>
           {videoLoading && (
             <div className="video-spinner" aria-label="Loading video">
