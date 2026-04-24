@@ -1,5 +1,6 @@
-  /* Override main site globals for the docs section */
-  html, body { overflow: auto !important; height: auto !important; }
+  /* Override main site's overflow:hidden so docs pages can scroll */
+  html { overflow: auto !important; height: auto !important; }
+  body { overflow: visible !important; height: auto !important; }
 
   * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -27,7 +28,8 @@
 
   /* ── TOP BAR ───────────────────────────────────── */
   .topbar { position:fixed; top:0; left:0; right:0; height:52px; background:#fff; border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; z-index:100; }
-  .topbar-logo { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700; letter-spacing:-0.2px; color:var(--text); }
+  .topbar-logo { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700; letter-spacing:-0.2px; color:var(--text); text-decoration:none; }
+  .topbar-logo:hover { text-decoration:none; }
   .topbar-logo img { width:26px; height:26px; object-fit:contain; filter:brightness(0); }
   .topbar-sep { width:1px; height:20px; background:var(--border); margin:0 20px; }
   .topbar-product { font-size:13px; color:var(--text-2); font-weight:500; }

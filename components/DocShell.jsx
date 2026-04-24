@@ -57,6 +57,7 @@ export default function DocShell({ children }) {
     document.body.classList.toggle("no-scroll", lock);
   }, [menuOpen, searchOpen]);
 
+
   const allItems = navGroups.flatMap((g) =>
     g.items.map((i) => ({ ...i, grp: g.label }))
   );
@@ -71,10 +72,10 @@ export default function DocShell({ children }) {
   return (
     <>
       <div className="topbar">
-        <div className="topbar-logo">
+        <a href="/" className="topbar-logo">
           <img src="/icon-transparent.png" alt="Arcana Mace" />
           Arcana Mace
-        </div>
+        </a>
         <div className="topbar-sep"></div>
         <div className="topbar-product">Capabilities</div>
         <div className="topbar-right">
