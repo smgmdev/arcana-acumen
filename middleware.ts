@@ -17,5 +17,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/orbital', '/ground-max'],
+  matcher: ['/orbital', '/ground-max', '/docs/:path*'],
 }

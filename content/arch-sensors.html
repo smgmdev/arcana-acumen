@@ -1,0 +1,63 @@
+<div class="crumbs"><span>Architecture</span><span class="sep">/</span><span class="cur">Sensor network</span></div>
+      <h1 class="page-title">Physical sensor architecture</h1>
+      <p class="page-lead">Five sensor modalities, fused by an edge processing node, with tamper-resistant hardened enclosures and redundant uplink.</p>
+
+      <h2 id="sn-catalog">Sensor catalog</h2>
+      <table>
+        <thead><tr><th>Sensor type</th><th>Hardware</th><th>Range</th><th>Protocol</th></tr></thead>
+        <tbody>
+          <tr><td>RF detection</td><td>Dedrone DroneSentry-X</td><td class="blue">5 km radius</td><td>MQTT / TLS</td></tr>
+          <tr><td>3D radar</td><td>Robin Radar ELVIRA</td><td class="blue">10 km radius</td><td>REST / UDP</td></tr>
+          <tr><td>Thermal camera</td><td>FLIR A700 + pan-tilt</td><td class="blue">3 km LOS</td><td>ONVIF / RTSP</td></tr>
+          <tr><td>Acoustic array</td><td>Squarehead HA-G</td><td class="blue">500 m – 2 km</td><td>Ethernet / TCP</td></tr>
+          <tr><td>ADS-B receiver</td><td>Mode S Beast</td><td class="blue">250 nm</td><td>SBS-1 / AVR</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="sn-edge">Edge processing node</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h4>Compute</h4>
+          <ul>
+            <li>NVIDIA Jetson AGX Orin (275 TOPS)</li>
+            <li>Local AI inference for real-time classification</li>
+            <li>4G / 5G + Starlink backup uplink</li>
+            <li>Solar + battery for remote sites</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Security &amp; reliability</h4>
+          <ul>
+            <li>Tamper-proof hardened enclosure (IP67)</li>
+            <li>AES-256 encrypted uplink to central hub</li>
+            <li>Local alert trigger (&lt;200 ms) before cloud sync</li>
+            <li>Redundant storage: 30-day local retention</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 id="sn-fusion">Sensor fusion</h2>
+      <div class="code-block"><pre><span class="c-com"># Sensor fusion: correlating RF + Radar + Thermal detections</span>
+
+<span class="c-kw">class</span> <span class="c-cls">SensorFusionEngine</span>:
+
+    CORRELATION_WINDOW_MS = <span class="c-str">5000</span>   <span class="c-com"># 5 second window</span>
+    CONFIDENCE_THRESHOLD  = <span class="c-str">0.85</span>
+
+    <span class="c-kw">def</span> <span class="c-fn">fuse_detections</span>(self, detections: <span class="c-cls">List</span>[<span class="c-cls">SensorEvent</span>]) -&gt; <span class="c-cls">ThreatObject</span>:
+        clusters = self.spatiotemporal_cluster(detections)
+
+        <span class="c-kw">for</span> cluster <span class="c-kw">in</span> clusters:
+            confidence = self.compute_fusion_confidence(cluster)
+
+            <span class="c-kw">if</span> confidence &gt;= self.CONFIDENCE_THRESHOLD:
+                <span class="c-kw">return</span> <span class="c-cls">ThreatObject</span>(
+                    lat=cluster.centroid_lat,
+                    lon=cluster.centroid_lon,
+                    altitude=cluster.estimated_alt,
+                    threat_class=self.classify_threat(cluster),
+                    confidence=confidence,
+                    velocity_ms=cluster.velocity,
+                    heading=cluster.heading,
+                    estimated_impact=self.project_trajectory(cluster)
+                )</pre></div>

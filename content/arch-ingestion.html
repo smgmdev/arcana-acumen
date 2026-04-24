@@ -1,0 +1,43 @@
+<div class="crumbs"><span>Architecture</span><span class="sep">/</span><span class="cur">Data ingestion</span></div>
+      <h1 class="page-title">External data source integration</h1>
+      <p class="page-lead">Eight source families feed the ingestion layer, ranging from sub-hourly SAR tasking through to continuous real-time sensor and OSINT streams.</p>
+
+      <h2 id="di-sources">Source catalog</h2>
+      <table>
+        <thead><tr><th>Source</th><th>Protocol</th><th>Frequency</th><th>Data type</th><th>Volume</th></tr></thead>
+        <tbody>
+          <tr><td>ICEYE SAR Satellite</td><td>REST + S3</td><td class="blue">Sub-hourly tasking</td><td>GeoTIFF, XML meta</td><td>10–50 GB/day</td></tr>
+          <tr><td>Planet Labs</td><td>Planet SDK (Python)</td><td class="blue">Daily</td><td>GeoTIFF scenes</td><td>100–500 GB/day</td></tr>
+          <tr><td>BlackSky</td><td>REST API</td><td class="blue">On-demand</td><td>JPEG2000, GeoJSON</td><td>5–20 GB/event</td></tr>
+          <tr><td>HawkEye 360</td><td>Secure FTP / API</td><td class="blue">Near real-time</td><td>RF detections, GeoJSON</td><td>1–5 GB/day</td></tr>
+          <tr><td>Spire AIS</td><td>WebSocket stream</td><td class="green">Real-time</td><td>NMEA, JSON</td><td>Continuous</td></tr>
+          <tr><td>Ground sensors (RF / Radar)</td><td>MQTT over TLS</td><td class="green">Real-time (100ms)</td><td>Binary packets</td><td>Continuous</td></tr>
+          <tr><td>News / RSS / Social</td><td>RSS / REST</td><td class="blue">Every 5 minutes</td><td>Text, HTML, JSON</td><td>1–10 GB/day</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="di-pipeline">Ingestion pipeline</h2>
+      <div class="code-block"><pre><span class="c-com"># Example: Satellite ingestion pipeline (Python)</span>
+
+<span class="c-kw">class</span> <span class="c-cls">SatelliteIngestionPipeline</span>:
+
+    <span class="c-kw">def</span> <span class="c-fn">__init__</span>(self):
+        self.iceye_client   = <span class="c-cls">ICEYEClient</span>(api_key=env.ICEYE_KEY)
+        self.planet_client  = <span class="c-cls">PlanetClient</span>(api_key=env.PLANET_KEY)
+        self.kafka_producer = <span class="c-cls">KafkaProducer</span>(bootstrap_servers=KAFKA_BROKERS)
+
+    <span class="c-kw">async def</span> <span class="c-fn">ingest_sar_imagery</span>(self, aoi: <span class="c-cls">GeoJSON</span>) -&gt; <span class="c-kw">None</span>:
+        <span class="c-com"># Area of interest: target regions for the local government</span>
+        scenes = <span class="c-kw">await</span> self.iceye_client.search(
+            aoi=aoi,
+            start_time=datetime.utcnow() - timedelta(hours=<span class="c-str">2</span>),
+            product_type=<span class="c-str">"SLC"</span>
+        )
+        <span class="c-kw">for</span> scene <span class="c-kw">in</span> scenes:
+            imagery  = <span class="c-kw">await</span> self.iceye_client.download(scene.id)
+            metadata = self.extract_metadata(imagery)
+            <span class="c-com"># Publish to Kafka for downstream AI processing</span>
+            self.kafka_producer.send(
+                topic=<span class="c-str">"satellite.sar.raw"</span>,
+                value=<span class="c-cls">ImageryPayload</span>(scene=imagery, meta=metadata)
+            )</pre></div>

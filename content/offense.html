@@ -1,0 +1,50 @@
+<div class="crumbs"><span>Capabilities</span><span class="sep">/</span><span class="cur">Offense</span></div>
+      <h1 class="page-title">Offense</h1>
+      <p class="page-lead">Arcana Mace connects to ready interceptors and fires only on human confirmation. Defense analytics inform the decision — offense action is always commander-authorised.</p>
+
+      <h2 id="off-flow">Analytics first, engagement second</h2>
+      <p>The engagement path is deliberately sequential: the system first delivers real-time defense analytics; the operator reviews the target, source, weapon class, and trajectory; only then is offense action authorised. This is an architectural rule, not a configurable setting.</p>
+
+      <div class="callout danger">
+        <div class="title">Human-in-the-loop, always</div>
+        <p>No interception is initiated without explicit commander authorisation. AI provides targeting solutions — humans authorise engagement.</p>
+      </div>
+
+      <h2 id="off-engage">Engagement path</h2>
+      <div class="flow">
+        <div class="flow-item">
+          <div class="flow-label">Detect</div>
+          <h4>Threat crosses a protection zone</h4>
+          <p>Alert card fires with weapon type, source, target, and trajectory.</p>
+          <figure style="margin:14px 0 0; border:1px solid var(--border); background:#0b0d10;">
+            <img src="/screenshots/Screenshot%202026-04-24%20at%207.50.27%E2%80%AFAM.png" alt="Multiple simultaneous THREAT alert cards firing across Zone 1, Zone 2, and Zone 3" style="width:100%; height:auto; display:block;"/>
+          </figure>
+        </div>
+        <div class="flow-item">
+          <div class="flow-label">Track</div>
+          <h4>Live tracking opens</h4>
+          <p>Live ETA, lat/lon position, engagement-theatre map feed, and nearest interceptor in range.</p>
+          <figure style="margin:14px 0 0; border:1px solid var(--border); background:#0b0d10; max-width:420px;">
+            <img src="/screenshots/Screenshot%202026-04-24%20at%207.50.45%E2%80%AFAM.png" alt="Live Tracking popup — MISSILE · Iran → Israel with progress, ETA, position, and Connect to Orb button" style="width:100%; height:auto; display:block;"/>
+          </figure>
+        </div>
+        <div class="flow-item">
+          <div class="flow-label">Confirm</div>
+          <h4>Commander authorises</h4>
+          <p>Operator selects the connected interceptor and confirms engagement — the system does not proceed otherwise.</p>
+          <figure style="margin:14px 0 0; border:1px solid var(--border); background:#0b0d10;">
+            <img src="/screenshots/Screenshot%202026-04-24%20at%207.55.06%E2%80%AFAM.png" alt="Target locked — laser firing countdown from the orb to the inbound missile" style="width:100%; height:auto; display:block;"/>
+          </figure>
+        </div>
+        <div class="flow-item">
+          <div class="flow-label">Eliminate</div>
+          <h4>Target neutralised</h4>
+          <p>Interceptor engages the moving target, live countdown runs, trajectory is removed, and the alert card flips to <strong>TARGET ELIMINATED</strong>.</p>
+          <figure style="margin:14px 0 0; border:1px solid var(--border); background:#0b0d10;">
+            <img src="/screenshots/Screenshot%202026-04-24%20at%207.55.14%E2%80%AFAM.png" alt="Orb Command connected — ORBITAL DEFENSE · CONNECTED with INTERCEPT button and live tracking" style="width:100%; height:auto; display:block;"/>
+          </figure>
+          <figure style="margin:14px 0 0; border:1px solid var(--border); background:#0b0d10; max-width:260px;">
+            <img src="/screenshots/Screenshot%202026-04-24%20at%207.55.23%E2%80%AFAM.png" alt="Threat card flipped to TARGET ELIMINATED — green border, strikethrough weapon badge" style="width:100%; height:auto; display:block;"/>
+          </figure>
+        </div>
+      </div>

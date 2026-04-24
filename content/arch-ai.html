@@ -1,0 +1,91 @@
+<div class="crumbs"><span>Architecture</span><span class="sep">/</span><span class="cur">AI pipeline</span></div>
+      <h1 class="page-title">AI analysis pipeline</h1>
+      <p class="page-lead">Three model stacks — computer vision, language AI, and prediction — orchestrated into one unified threat-intelligence output.</p>
+
+      <h2 id="ap-stacks">Model stacks</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h4>Computer vision</h4>
+          <ul>
+            <li>YOLOv9 base — real-time detection</li>
+            <li>Fine-tuned on adversary vehicle types</li>
+            <li>Fine-tuned on adversary UAV signatures</li>
+            <li>Adversary naval vessel classifier</li>
+            <li>Missile launcher shape detection</li>
+            <li>Change detection: before/after SAR</li>
+            <li>NVIDIA A100 GPU cluster</li>
+            <li>&lt;500 ms per satellite tile</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Language AI</h4>
+          <ul>
+            <li>Claude via Azure Local Gov Region</li>
+            <li>Local language–English translation</li>
+            <li>Open-source reporting monitoring</li>
+            <li>Entity extraction: people, places, units</li>
+            <li>Threat-relevance scoring</li>
+            <li>Auto briefing generation</li>
+            <li>Adversary state-media analysis</li>
+            <li>Data stays in local government Azure region</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Prediction</h4>
+          <ul>
+            <li>LSTM time-series pattern matching</li>
+            <li>Historical pre-attack signature DB</li>
+            <li>Multi-domain signal correlation</li>
+            <li>Bayesian threat-probability engine</li>
+            <li>Outputs: probability, confidence, window</li>
+            <li>Retrained weekly</li>
+            <li>False-positive feedback loop</li>
+            <li>Alert threshold configurable</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 id="ap-code">Orchestration code</h2>
+      <div class="code-block"><pre><span class="c-com"># AI threat analysis pipeline</span>
+
+<span class="c-kw">async def</span> <span class="c-fn">analyze_threat_context</span>(
+    threat_obj: <span class="c-cls">ThreatObject</span>,
+    satellite_context: <span class="c-cls">SatelliteScene</span>,
+    osint_feed: <span class="c-cls">OSINTBuffer</span>
+) -&gt; <span class="c-cls">ThreatIntelligence</span>:
+
+    <span class="c-com"># Step 1: Computer vision on satellite imagery</span>
+    cv_findings = <span class="c-kw">await</span> classify_satellite_objects(satellite_context)
+
+    <span class="c-com"># Step 2: Language AI — local-language OSINT analysis (Claude via Azure Local Gov)</span>
+    osint_analysis = <span class="c-kw">await</span> claude_client.messages.create(
+        model=<span class="c-str">"claude-sonnet-4-6"</span>,
+        system=ARCANA_MACE_SYSTEM_PROMPT_AR,
+        messages=[{
+            <span class="c-str">"role"</span>: <span class="c-str">"user"</span>,
+            <span class="c-str">"content"</span>: <span class="c-kw">f</span><span class="c-str">"Analyze for threat indicators:\n{osint_feed.recent_content}"</span>
+        }]
+    )
+
+    <span class="c-com"># Step 3: Multi-domain correlation + prediction score</span>
+    prediction = threat_model.predict(
+        cv_findings=cv_findings,
+        osint_signals=osint_analysis,
+        sensor_data=threat_obj,
+        historical_patterns=ATTACK_PATTERN_DB
+    )
+
+    <span class="c-com"># Step 4: Generate commander briefing in local language + English</span>
+    briefing = <span class="c-kw">await</span> generate_briefing(
+        threat=threat_obj,
+        analysis=prediction,
+        language=[<span class="c-str">"ar"</span>, <span class="c-str">"en"</span>]
+    )
+
+    <span class="c-kw">return</span> <span class="c-cls">ThreatIntelligence</span>(
+        threat=threat_obj,
+        cv_findings=cv_findings,
+        prediction=prediction,
+        briefing=briefing,
+        alert_level=compute_alert_level(prediction.probability)
+    )</pre></div>

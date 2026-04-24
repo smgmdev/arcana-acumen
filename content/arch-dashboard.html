@@ -1,0 +1,71 @@
+<div class="crumbs"><span>Architecture</span><span class="sep">/</span><span class="cur">Commander interface</span></div>
+      <h1 class="page-title">Threat dashboard specifications</h1>
+      <p class="page-lead">Three integrated panels: live threat map, threat intelligence, and alert &amp; notification system — in the local language and English.</p>
+
+      <h2 id="cd-panels">Panels</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h4>Real-time threat map</h4>
+          <ul>
+            <li>Region of interest + adversary territory</li>
+            <li>Threat objects plotted with trail</li>
+            <li>Color coded: Red / Amber / Green</li>
+            <li>Satellite imagery underlay</li>
+            <li>AIS ship positions overlaid</li>
+            <li>Flight tracks overlaid</li>
+            <li>Drone detections from ground sensors</li>
+            <li>Local language + English toggle</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Threat intelligence</h4>
+          <ul>
+            <li>Active threats with confidence %</li>
+            <li>Predicted trajectory visualization</li>
+            <li>Time-to-impact countdown</li>
+            <li>AI-generated narrative (AR/EN)</li>
+            <li>Historical pattern match display</li>
+            <li>OSINT signals that triggered alert</li>
+            <li>Analyst annotation capability</li>
+            <li>One-click PDF briefing export</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Alerts &amp; notifications</h4>
+          <ul>
+            <li>Tiered: Info / Warning / Critical</li>
+            <li>Push to secure mobile app</li>
+            <li>SMS to command roster</li>
+            <li>Secure radio integration option</li>
+            <li>Escalation tree configurable</li>
+            <li>Alert acknowledgment tracking</li>
+            <li>False-positive feedback button</li>
+            <li>Full immutable audit log</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 id="cd-websocket">WebSocket feed</h2>
+      <div class="code-block"><pre><span class="c-com"># Commander dashboard — real-time WebSocket data flow</span>
+
+<span class="c-kw">@app.websocket</span>(<span class="c-str">"/ws/threat-feed/{client_id}"</span>)
+<span class="c-kw">async def</span> <span class="c-fn">threat_feed</span>(websocket: <span class="c-cls">WebSocket</span>, client_id: <span class="c-cls">str</span>):
+    <span class="c-kw">await</span> manager.connect(websocket, client_id)
+    <span class="c-kw">try</span>:
+        <span class="c-kw">async for</span> event <span class="c-kw">in</span> kafka_consumer.subscribe(<span class="c-str">"threats.processed"</span>):
+            threat  = <span class="c-cls">ThreatEvent</span>.parse(event)
+            payload = {
+                <span class="c-str">"type"</span>: <span class="c-str">"THREAT_UPDATE"</span>,
+                <span class="c-str">"threat_id"</span>: threat.id,
+                <span class="c-str">"alert_level"</span>: threat.alert_level,
+                <span class="c-str">"lat"</span>: threat.lat, <span class="c-str">"lon"</span>: threat.lon,
+                <span class="c-str">"trajectory"</span>: threat.projected_path,
+                <span class="c-str">"impact_time_seconds"</span>: threat.time_to_impact,
+                <span class="c-str">"confidence"</span>: threat.confidence,
+                <span class="c-str">"narrative_local"</span>: threat.briefing_local,
+                <span class="c-str">"narrative_en"</span>: threat.briefing_english,
+                <span class="c-str">"sources"</span>: threat.contributing_sensors
+            }
+            <span class="c-kw">await</span> websocket.send_json(payload)
+    <span class="c-kw">except</span> <span class="c-cls">WebSocketDisconnect</span>:
+        manager.disconnect(client_id)</pre></div>

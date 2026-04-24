@@ -1,0 +1,42 @@
+<div class="crumbs"><span>Architecture</span><span class="sep">/</span><span class="cur">System overview</span></div>
+      <h1 class="page-title">System overview</h1>
+      <p class="page-lead">Arcana Mace is a multi-layer threat intelligence and detection platform. Data flows from external sources (satellite, ground sensors, open-source) through ingestion pipelines, into the AI analysis engine, and out to commander dashboards and interception systems.</p>
+
+      <h2 id="ao-diagram">High-level architecture</h2>
+      <div class="arch">
+        <div class="arch-group-label">// Data sources</div>
+        <div class="arch-row">
+          <div class="arch-box red"><div class="bl">Satellite</div><div class="bn">ICEYE / Planet / BlackSky</div><div class="bd">SAR + Optical + Video</div></div>
+          <div class="arch-box red"><div class="bl">Signals</div><div class="bn">HawkEye 360</div><div class="bd">RF intelligence</div></div>
+          <div class="arch-box red"><div class="bl">Maritime</div><div class="bn">Spire / AIS</div><div class="bd">Vessel tracking</div></div>
+          <div class="arch-box red"><div class="bl">Ground</div><div class="bn">RF / Radar / Thermal</div><div class="bd">Physical network</div></div>
+          <div class="arch-box red"><div class="bl">OSINT</div><div class="bn">News / Social / Web</div><div class="bd">Local language + English</div></div>
+        </div>
+        <div class="arch-arrow">↓ ↓ ↓ ↓ ↓</div>
+
+        <div class="arch-group-label">// Ingestion layer</div>
+        <div class="arch-row">
+          <div class="arch-box"><div class="bl">API connectors</div><div class="bn">Satellite API clients</div><div class="bd">Python / REST / gRPC</div></div>
+          <div class="arch-box"><div class="bl">Stream processor</div><div class="bn">Apache Kafka</div><div class="bd">Real-time events</div></div>
+          <div class="arch-box"><div class="bl">Sensor gateway</div><div class="bn">Edge IoT bridge</div><div class="bd">MQTT / WebSocket</div></div>
+          <div class="arch-box"><div class="bl">OSINT scraper</div><div class="bn">Crawler + parser</div><div class="bd">Local language NLP prep</div></div>
+        </div>
+        <div class="arch-arrow">↓ ↓ ↓ ↓ ↓</div>
+
+        <div class="arch-group-label">// AI analysis engine · Azure Local Gov Region</div>
+        <div class="arch-row">
+          <div class="arch-box primary"><div class="bl">Computer vision</div><div class="bn">CV model</div><div class="bd">Object detection + classification</div></div>
+          <div class="arch-box primary"><div class="bl">Language AI</div><div class="bn">Claude · Azure Local Gov</div><div class="bd">Local language + English</div></div>
+          <div class="arch-box primary"><div class="bl">Fusion engine</div><div class="bn">Multi-source correlator</div><div class="bd">Cross-domain matching</div></div>
+          <div class="arch-box primary"><div class="bl">Prediction</div><div class="bn">Threat scoring model</div><div class="bd">Probability + window</div></div>
+        </div>
+        <div class="arch-arrow">↓ ↓ ↓ ↓ ↓</div>
+
+        <div class="arch-group-label">// Output layer</div>
+        <div class="arch-row">
+          <div class="arch-box green"><div class="bl">Commander UI</div><div class="bn">Threat dashboard</div><div class="bd">AR / EN · real-time</div></div>
+          <div class="arch-box green"><div class="bl">Alerts</div><div class="bn">Push notifications</div><div class="bd">SMS / App / Radio</div></div>
+          <div class="arch-box green"><div class="bl">Reports</div><div class="bn">AI briefing generator</div><div class="bd">PDF / local language</div></div>
+          <div class="arch-box green"><div class="bl">Interception API</div><div class="bn">Targeting output</div><div class="bd">Laser / Patriot / THAAD</div></div>
+        </div>
+      </div>

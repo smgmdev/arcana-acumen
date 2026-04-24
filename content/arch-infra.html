@@ -1,0 +1,87 @@
+<div class="crumbs"><span>Architecture</span><span class="sep">/</span><span class="cur">Infrastructure</span></div>
+      <h1 class="page-title">Production deployment stack</h1>
+      <p class="page-lead">End-to-end Azure Local Gov Region footprint — Kubernetes, Kafka, time-series storage, AI inference, and full monitoring.</p>
+
+      <h2 id="inf-stack">Technology stack</h2>
+      <table>
+        <thead><tr><th>Component</th><th>Technology</th></tr></thead>
+        <tbody>
+          <tr><td>Container orchestration</td><td>Kubernetes (AKS · Azure Local Gov Region)</td></tr>
+          <tr><td>Message streaming</td><td>Apache Kafka (HDInsight)</td></tr>
+          <tr><td>Time-series DB</td><td>InfluxDB / Azure Data Explorer</td></tr>
+          <tr><td>Object storage</td><td>Azure Blob Storage (Local Gov Region)</td></tr>
+          <tr><td>Relational DB</td><td>PostgreSQL (Azure Flexible Server)</td></tr>
+          <tr><td>Document store</td><td>Azure Cosmos DB</td></tr>
+          <tr><td>AI inference</td><td>Azure ML + GPU cluster (A100)</td></tr>
+          <tr><td>Language AI</td><td>Azure OpenAI (Claude) Local Gov Region</td></tr>
+          <tr><td>Dashboard frontend</td><td>React + MapboxGL + WebSocket</td></tr>
+          <tr><td>Backend API</td><td>Python / FastAPI</td></tr>
+          <tr><td>Monitoring</td><td>Azure Monitor + Grafana</td></tr>
+          <tr><td>CI/CD</td><td>Azure DevOps (local government region)</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="inf-perf">Performance &amp; security</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h4>Performance SLA</h4>
+          <ul>
+            <li>Drone detection alert: &lt;500 ms end-to-end</li>
+            <li>Satellite analysis: &lt;5 min from image acquisition</li>
+            <li>OSINT alert: &lt;2 min from content publish</li>
+            <li>Dashboard refresh: real-time WebSocket</li>
+            <li>Targeting data update rate: 100 ms</li>
+            <li>System uptime SLA: 99.95%</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Security</h4>
+          <ul>
+            <li>All data encrypted at rest (AES-256)</li>
+            <li>All data encrypted in transit (TLS 1.3)</li>
+            <li>Zero-trust network architecture</li>
+            <li>MFA required for all dashboard access</li>
+            <li>Full immutable audit log</li>
+            <li>Penetration testing: quarterly</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 id="inf-roadmap">Build roadmap</h2>
+      <div class="flow">
+        <div class="flow-item">
+          <div class="flow-label">Stage 1</div>
+          <h4>Infrastructure + data ingestion</h4>
+          <p>Azure Local Gov Region setup. Kafka cluster deployed. Satellite API integrations (ICEYE, Planet, BlackSky, HawkEye, Spire). AIS stream live.</p>
+          <div class="tags"><span class="tag blue">Azure</span><span class="tag blue">Kafka</span><span class="tag blue">Satellite APIs</span><span class="tag blue">AIS</span></div>
+        </div>
+        <div class="flow-item">
+          <div class="flow-label">Stage 2</div>
+          <h4>AI pipeline + basic dashboard</h4>
+          <p>Computer vision model deployed on satellite imagery. Claude integration for OSINT. Basic threat dashboard with map. Local-language UI. Internal testing.</p>
+          <div class="tags"><span class="tag green">CV Model</span><span class="tag green">Claude API</span><span class="tag green">React Dashboard</span><span class="tag green">Local-Language UI</span></div>
+        </div>
+        <div class="flow-item">
+          <div class="flow-label">Stage 3</div>
+          <h4>Threat scoring + briefing generation</h4>
+          <p>Predictive threat scoring model. Multi-domain correlation engine. Auto local-language + English briefing generation. Alert notification system. Government pilot demo ready.</p>
+          <div class="tags"><span class="tag orange">Prediction Model</span><span class="tag orange">Briefing Gen</span><span class="tag orange">Alert System</span></div>
+        </div>
+        <div class="flow-item">
+          <div class="flow-label">Stage 4</div>
+          <h4>Ground sensor integration + pilot deployment</h4>
+          <p>First physical sensor nodes deployed at local government critical sites. Sensor fusion engine live. Drone detection operational. Government pilot running.</p>
+          <div class="tags"><span class="tag orange">Sensor Nodes</span><span class="tag orange">Sensor Fusion</span><span class="tag orange">Gov Pilot</span></div>
+        </div>
+        <div class="flow-item">
+          <div class="flow-label">Stage 5</div>
+          <h4>National deployment + interception API</h4>
+          <p>Full local government sensor network deployed. Interception targeting API built and tested with partner system. Full production system. First government contract signed.</p>
+          <div class="tags"><span class="tag green">National Coverage</span><span class="tag green">Interception API</span><span class="tag green">Production</span></div>
+        </div>
+      </div>
+
+      <div class="page-foot">
+        <span>Arcana Mace · Confidential · April 2026</span>
+        <span>Not for distribution</span>
+      </div>

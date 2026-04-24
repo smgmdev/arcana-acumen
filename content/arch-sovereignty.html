@@ -1,0 +1,33 @@
+<div class="crumbs"><span>Architecture</span><span class="sep">/</span><span class="cur">Data sovereignty</span></div>
+      <h1 class="page-title">Local government-sovereign cloud architecture</h1>
+      <p class="page-lead">All AI inference, data storage, and processing occur on physical servers within Local Government territory. No government intelligence data transits to servers outside Local Government jurisdiction.</p>
+
+      <div class="callout">
+        <div class="title">Critical requirement</div>
+        <p>All AI inference, data storage, and processing <strong>must occur on physical servers within Local Government territory</strong>. No government intelligence data may transit to servers outside Local Government jurisdiction.</p>
+      </div>
+
+      <h2 id="ds-deployment">Component deployment</h2>
+      <table>
+        <thead><tr><th>Component</th><th>Deployment</th><th>Sovereignty</th></tr></thead>
+        <tbody>
+          <tr><td>AI language model (Claude)</td><td>Azure OpenAI Local Gov Region</td><td class="green">Local Gov soil</td></tr>
+          <tr><td>CV model inference</td><td>Azure ML · Local Gov Region</td><td class="green">Local Gov soil</td></tr>
+          <tr><td>Kafka streaming</td><td>Azure HDInsight · Local Gov Region</td><td class="green">Local Gov soil</td></tr>
+          <tr><td>Imagery storage</td><td>Azure Blob · Local Gov Region</td><td class="green">Local Gov soil</td></tr>
+          <tr><td>Commander dashboard</td><td>Azure App Service · Local Gov Region</td><td class="green">Local Gov soil</td></tr>
+          <tr><td>Ground sensor data</td><td>Edge nodes → Local Gov Region only</td><td class="green">Local Gov soil</td></tr>
+          <tr><td>OSINT raw data</td><td>Azure CosmosDB · Local Gov Region</td><td class="green">Local Gov soil</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="ds-azure">Local government Azure region — facts</h2>
+      <div class="grid-2">
+        <div class="card"><h4>Physical</h4><p>Physical location: local government capital. Local-sovereign cloud designation. Data-residency guarantee in contract. Geo-redundancy: secondary local region. 99.99% SLA on core services.</p></div>
+        <div class="card"><h4>Legal &amp; compliance</h4><p>ISO 27001 / SOC 2 certified. Local national cyber-security authority compliance capable. <strong>No foreign CLOUD Act jurisdiction applies.</strong></p></div>
+      </div>
+
+      <div class="callout warn">
+        <div class="title">Classified feeds</div>
+        <p>Commercial satellite OSINT data (unclassified) flows through cloud normally. Any data provided by government (classified feeds, additional sensor data) is processed only on isolated, air-gapped government-controlled infrastructure that Arcana Mace deploys on-premise — it never touches public cloud.</p>
+      </div>

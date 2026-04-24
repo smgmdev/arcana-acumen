@@ -1,0 +1,59 @@
+<div class="crumbs"><span>Architecture</span><span class="sep">/</span><span class="cur">Interception API</span></div>
+      <h1 class="page-title">Targeting data output API</h1>
+      <p class="page-lead">Arcana Mace outputs real-time targeting data via secure API to connected interception systems. Hardware-agnostic — the same targeting data feeds laser systems, electronic jamming, or existing Patriot / THAAD fire control.</p>
+
+      <h2 id="ia-flow">Kill-chain flow</h2>
+      <div class="flow-wrap">
+        <div class="stage">Detect</div>
+        <div class="content"><h4>Threat confirmed by fusion engine</h4><p>Multi-sensor fusion confirms threat. Confidence above threshold. ThreatObject created with position, velocity, heading, class.</p></div>
+      </div>
+      <div class="flow-wrap">
+        <div class="stage">Track</div>
+        <div class="content"><h4>Real-time trajectory projection</h4><p>Kalman filter tracks object position. Trajectory projected at 100ms intervals. Impact point predicted with ±50m accuracy at 10km range.</p></div>
+      </div>
+      <div class="flow-wrap">
+        <div class="stage">Authorize</div>
+        <div class="content"><h4>Engagement authorization · human in the loop</h4><p>Commander receives alert. One-button authorization on secure dashboard. Engagement authority always remains with human commander — AI never fires autonomously.</p></div>
+      </div>
+      <div class="flow-wrap">
+        <div class="stage">Output</div>
+        <div class="content"><h4>Targeting data transmitted to interception system</h4><p>Secure encrypted API sends real-time targeting coordinates, velocity vector, predicted intercept point, and recommended engagement window.</p></div>
+      </div>
+
+      <h2 id="ia-code">Targeting API</h2>
+      <div class="code-block"><pre><span class="c-com"># Targeting data output — interception system API</span>
+
+<span class="c-kw">class</span> <span class="c-cls">InterceptionTargetingAPI</span>:
+
+    <span class="c-kw">def</span> <span class="c-fn">__init__</span>(self, system: <span class="c-cls">InterceptionSystem</span>):
+        self.system = system   <span class="c-com"># IronBeam | RaytheonHEL | Patriot</span>
+        self.authorized = <span class="c-kw">False</span>
+
+    <span class="c-kw">async def</span> <span class="c-fn">stream_targeting_data</span>(
+        self,
+        threat: <span class="c-cls">ThreatObject</span>,
+        commander_authorization: <span class="c-cls">AuthToken</span>
+    ):
+        <span class="c-com"># MANDATORY: human commander must authorize before streaming</span>
+        <span class="c-kw">if not</span> verify_authorization(commander_authorization):
+            <span class="c-kw">raise</span> <span class="c-cls">UnauthorizedEngagement</span>(<span class="c-str">"Commander auth required"</span>)
+
+        <span class="c-kw">async for</span> position_update <span class="c-kw">in</span> self.track_threat(threat):
+            intercept_solution = self.compute_intercept_point(
+                current_pos=position_update,
+                laser_range=self.system.max_range_m,
+                engagement_time_ms=self.system.target_acquisition_ms
+            )
+            <span class="c-kw">await</span> self.system.send_targeting(<span class="c-cls">TargetingPacket</span>(
+                azimuth=intercept_solution.azimuth,
+                elevation=intercept_solution.elevation,
+                range_m=intercept_solution.range,
+                velocity_vector=position_update.velocity,
+                time_to_intercept_ms=intercept_solution.tti,
+                priority=<span class="c-str">"HIGH"</span>
+            ))</pre></div>
+
+      <div class="callout warn">
+        <div class="title">Human-in-the-loop policy</div>
+        <p>Arcana Mace systems are designed as decision-support tools. No interception is initiated without explicit commander authorization. AI provides targeting solutions; humans authorize engagement. This is a hard architectural constraint, not a configurable setting.</p>
+      </div>

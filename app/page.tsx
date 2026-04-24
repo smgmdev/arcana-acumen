@@ -1,10 +1,10 @@
 import { getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
 import Image from 'next/image'
-import Link from 'next/link'
 import { sessionOptions, SessionData } from '@/lib/auth'
 import LoginModal from '@/components/LoginModal'
 import LogoutButton from '@/components/LogoutButton'
+import HomeTabs from '@/components/HomeTabs'
 
 export default async function HomePage() {
   const session = await getIronSession<SessionData>(cookies(), sessionOptions)
@@ -51,48 +51,29 @@ export default async function HomePage() {
               userSelect: 'none',
             }}>GOV</span>
           </div>
-        <div className="btn-row" style={{ marginTop: '2.4rem', position: 'relative', zIndex: 1 }}>
-          {isLoggedIn ? (
-            <>
-              <Link href="/orbital" className="btn">
-                <div className="btn-tag">Module 01</div>
-                <div className="btn-name">
-                  Arcana Mace
-                  <br />+ Empower
-                </div>
-                <div className="btn-sub">AIR ORB MAX</div>
-              </Link>
-              <Link href="/ground-max" className="btn">
-                <div className="btn-tag">Module 02</div>
-                <div className="btn-name">
-                  Arcana Mace
-                  <br />+ Empower
-                </div>
-                <div className="btn-sub">GROUND ORB MAX</div>
-              </Link>
-            </>
-          ) : (
-            <>
-              {/* Disabled-looking buttons before auth */}
-              <div className="btn" style={{ opacity: 0.4, cursor: 'default' }}>
-                <div className="btn-tag">Module 01</div>
-                <div className="btn-name">
-                  Arcana Mace
-                  <br />+ Empower
-                </div>
-                <div className="btn-sub">AIR ORB MAX</div>
+        {isLoggedIn ? (
+          <HomeTabs />
+        ) : (
+          <div className="btn-row" style={{ marginTop: '2.4rem', position: 'relative', zIndex: 1 }}>
+            {/* Disabled-looking buttons before auth */}
+            <div className="btn" style={{ opacity: 0.4, cursor: 'default' }}>
+              <div className="btn-tag">Module 01</div>
+              <div className="btn-name">
+                Arcana Mace
+                <br />+ Empower
               </div>
-              <div className="btn" style={{ opacity: 0.4, cursor: 'default' }}>
-                <div className="btn-tag">Module 02</div>
-                <div className="btn-name">
-                  Arcana Mace
-                  <br />+ Empower
-                </div>
-                <div className="btn-sub">GROUND ORB MAX</div>
+              <div className="btn-sub">AIR ORB MAX</div>
+            </div>
+            <div className="btn" style={{ opacity: 0.4, cursor: 'default' }}>
+              <div className="btn-tag">Module 02</div>
+              <div className="btn-name">
+                Arcana Mace
+                <br />+ Empower
               </div>
-            </>
-          )}
-        </div>
+              <div className="btn-sub">GROUND ORB MAX</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Show login modal when not authenticated */}
