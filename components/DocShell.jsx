@@ -30,6 +30,31 @@ export default function DocShell({ children }) {
     window.scrollTo({ top: 0 });
   }, [currentSlug]);
 
+  // Wrap each <img> in a skeleton loader until it's ready
+  useEffect(() => {
+    if (!mainRef.current) return;
+    const imgs = Array.from(mainRef.current.querySelectorAll("img"));
+    imgs.forEach((img) => {
+      if (img.dataset.loadingWired === "1") return;
+      img.dataset.loadingWired = "1";
+      if (img.complete && img.naturalWidth > 0) {
+        img.classList.add("img-loaded");
+        return;
+      }
+      img.classList.add("img-loading");
+      const onLoad = () => {
+        img.classList.remove("img-loading");
+        img.classList.add("img-loaded");
+      };
+      const onError = () => {
+        img.classList.remove("img-loading");
+        img.classList.add("img-error");
+      };
+      img.addEventListener("load", onLoad, { once: true });
+      img.addEventListener("error", onError, { once: true });
+    });
+  }, [currentSlug]);
+
   // Track which right-nav heading is active on scroll
   useEffect(() => {
     function onScroll() {
